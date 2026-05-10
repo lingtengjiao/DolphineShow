@@ -3,8 +3,8 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main   # 推送到 main 分支时自动触发部署
-  workflow_dispatch:  # 支持在 GitHub 网页上手动触发
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,27 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "."
+          target: ${{ secrets.DEPLOY_PATH }}
+          rm: false
+
+      - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
+          port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
-
-            # 进入项目目录（如不存在则克隆）
-            if [ ! -d "${{ secrets.DEPLOY_PATH }}" ]; then
-              git clone git@github.com:lingtengjiao/DolphineShow.git ${{ secrets.DEPLOY_PATH }}
-            fi
-
             cd ${{ secrets.DEPLOY_PATH }}
 
-            # 拉取最新代码
-            git pull origin main
-
-            # 写入生产环境变量（从 GitHub Secrets 注入）
+            # 写入生产环境变量
             cat > backend/.env <<EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
@@ -43,11 +45,10 @@ jobs:
             UPLOAD_DIR=/app/uploads
             EOF
 
-            # 重新构建并启动服务（不停机滚动更新）
-            docker compose pull --ignore-buildable
+            # 构建并启动服务
             docker compose up --build -d
 
             # 清理旧镜像
             docker image prune -f
 
-            echo "✅ Deployment completed successfully!"
+            echo "✅ Deployment completed!"

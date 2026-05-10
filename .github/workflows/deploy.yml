@@ -45,6 +45,20 @@ jobs:
             UPLOAD_DIR=/app/uploads
             EOF
 
+            # 修正 Docker 镜像源，避免拉取 docker.io 超时
+            mkdir -p /etc/docker
+            cat > /etc/docker/daemon.json <<'EOF'
+            {
+              "registry-mirrors": [
+                "https://docker.1ms.run",
+                "https://dockerpull.org",
+                "https://hub.rat.dev"
+              ]
+            }
+            EOF
+            systemctl daemon-reload || true
+            systemctl restart docker
+
             # 构建并启动服务
             docker compose up --build -d
 

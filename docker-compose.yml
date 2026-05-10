@@ -24,12 +24,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/plush_toy_db
-      SECRET_KEY: change-this-to-a-secure-random-string-in-production
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
-      UPLOAD_DIR: /app/uploads
+    env_file:
+      - ./backend/.env
     volumes:
       - uploads:/app/uploads
     ports:

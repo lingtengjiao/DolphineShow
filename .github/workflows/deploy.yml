@@ -43,6 +43,11 @@ jobs:
             ALGORITHM=HS256
             ACCESS_TOKEN_EXPIRE_MINUTES=1440
             UPLOAD_DIR=/app/uploads
+            TOS_ACCESS_KEY=${{ secrets.TOS_ACCESS_KEY }}
+            TOS_SECRET_KEY=${{ secrets.TOS_SECRET_KEY }}
+            TOS_BUCKET=dpshow
+            TOS_REGION=cn-shanghai
+            TOS_ENDPOINT=tos-cn-shanghai.volces.com
             EOF
 
             # 修正 Docker 镜像源，避免拉取 docker.io 超时

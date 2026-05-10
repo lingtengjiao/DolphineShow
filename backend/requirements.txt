@@ -12,3 +12,4 @@ pydantic-settings>=2.6.0
 pillow>=11.0.0
 aiofiles>=24.1.0
 python-slugify>=8.0.4
+tos>=2.7.0

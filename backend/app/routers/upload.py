@@ -1,7 +1,7 @@
-import os
+import io
 import uuid
 
-import aiofiles
+import tos
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from PIL import Image
 
@@ -15,6 +15,25 @@ ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_SIZE = 10 * 1024 * 1024  # 10MB
 
 
+def _tos_client():
+    return tos.TosClientV2(
+        ak=settings.TOS_ACCESS_KEY,
+        sk=settings.TOS_SECRET_KEY,
+        endpoint=settings.TOS_ENDPOINT,
+        region=settings.TOS_REGION,
+    )
+
+
+def _upload_bytes(client, key: str, data: bytes, content_type: str) -> str:
+    client.put_object(
+        bucket=settings.TOS_BUCKET,
+        key=key,
+        content=io.BytesIO(data),
+        content_type=content_type,
+    )
+    return f"https://{settings.TOS_BUCKET}.{settings.TOS_ENDPOINT}/{key}"
+
+
 @router.post("/image")
 async def upload_image(file: UploadFile, admin: User = Depends(require_admin)):
     if file.content_type not in ALLOWED_TYPES:
@@ -25,23 +44,26 @@ async def upload_image(file: UploadFile, admin: User = Depends(require_admin)):
 
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
     filename = f"{uuid.uuid4().hex}.{ext}"
-    filepath = os.path.join(settings.UPLOAD_DIR, filename)
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-
-    async with aiofiles.open(filepath, "wb") as f:
-        await f.write(content)
-
     thumb_filename = f"thumb_{filename}"
-    thumb_path = os.path.join(settings.UPLOAD_DIR, thumb_filename)
+
     try:
-        img = Image.open(filepath)
-        img.thumbnail((400, 400))
-        img.save(thumb_path)
-    except Exception:
-        thumb_filename = filename
+        client = _tos_client()
+        # 上传原图
+        url = _upload_bytes(client, f"images/{filename}", content, file.content_type)
+        # 生成缩略图并上传
+        try:
+            img = Image.open(io.BytesIO(content))
+            img.thumbnail((400, 400))
+            buf = io.BytesIO()
+            img.save(buf, format=img.format or "JPEG")
+            thumb_url = _upload_bytes(client, f"images/{thumb_filename}", buf.getvalue(), file.content_type)
+        except Exception:
+            thumb_url = url
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"TOS upload failed: {e}")
 
     return {
-        "url": f"/uploads/{filename}",
-        "thumbnail": f"/uploads/{thumb_filename}",
+        "url": url,
+        "thumbnail": thumb_url,
         "filename": filename,
     }

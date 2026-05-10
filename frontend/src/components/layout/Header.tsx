@@ -30,7 +30,8 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       {/* Top announcement bar */}
       <div className="bg-[#C8A96E] text-white text-xs text-center py-2 px-4 font-medium tracking-wide">
-        🎉 &nbsp;Professional Plush Toy B2B Supplier &nbsp;·&nbsp; OEM/ODM Custom Manufacturing &nbsp;·&nbsp; CE / CPC / ASTM Certified &nbsp;·&nbsp;
+        <span className="hidden md:inline">🎉 &nbsp;Professional Plush Toy B2B Supplier &nbsp;·&nbsp; OEM/ODM Custom Manufacturing &nbsp;·&nbsp; CE / CPC / ASTM Certified &nbsp;·&nbsp;</span>
+        <span className="md:hidden">🎉 &nbsp;B2B Plush Toy OEM Manufacturer &nbsp;·&nbsp;</span>
         <a href="mailto:admin@dolphineshow.com" className="underline underline-offset-2 hover:opacity-80 transition-opacity">Contact Us Now</a>
       </div>
 

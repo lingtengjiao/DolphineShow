@@ -4,20 +4,20 @@ export default function About() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-gradient-to-r from-brand/10 to-brand-light/10 py-20">
+      <section className="bg-gradient-to-r from-brand/10 to-brand-light/10 py-12 md:py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-extrabold font-bold text-gray-800 mb-6">About Us</h1>
-          <p className="text-lg text-gray-600 leading-relaxed">
+          <h1 className="text-3xl md:text-4xl font-extrabold font-bold text-gray-800 mb-4 md:mb-6">About Us</h1>
+          <p className="text-base md:text-lg text-gray-600 leading-relaxed">
             Over a decade of focus on plush toy manufacturing — delivering quality, safety, and creativity to customers worldwide.
           </p>
         </div>
       </section>
 
       {/* Story */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="max-w-7xl mx-auto px-4 py-10 md:py-16">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
-            <h2 className="text-2xl font-extrabold font-bold text-gray-800 mb-6">Our Story</h2>
+            <h2 className="text-xl md:text-2xl font-extrabold font-bold text-gray-800 mb-4 md:mb-6">Our Story</h2>
             <div className="space-y-4 text-gray-600 leading-relaxed">
               <p>
                 DolphineShow. Monnca was founded in 2010 in Yiwu, Zhejiang Province, China — the global hub of small commodity trade.
@@ -41,9 +41,9 @@ export default function About() {
       </section>
 
       {/* Certifications */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-10 md:py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl font-extrabold font-bold text-gray-800 text-center mb-10">Certifications & Compliance</h2>
+          <h2 className="text-xl md:text-2xl font-extrabold font-bold text-gray-800 text-center mb-6 md:mb-10">Certifications & Compliance</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { icon: '🛡️', title: 'CE Certified', desc: 'EU Safety Standard' },
@@ -66,8 +66,8 @@ export default function About() {
       </section>
 
       {/* Advantages */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-2xl font-extrabold font-bold text-gray-800 text-center mb-10">Why Choose Us</h2>
+      <section className="max-w-7xl mx-auto px-4 py-10 md:py-16">
+        <h2 className="text-xl md:text-2xl font-extrabold font-bold text-gray-800 text-center mb-6 md:mb-10">Why Choose Us</h2>
         <div className="grid md:grid-cols-3 gap-8">
           {[
             { icon: '🎨', title: 'In-House Design Team', desc: 'A team of 20 professional designers launching 30+ new styles monthly, supporting custom design from your artwork or samples.' },
@@ -87,9 +87,9 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="bg-gradient-to-br from-brand-light/30 to-accent/10 py-16 text-center">
+      <section className="bg-gradient-to-br from-brand-light/30 to-accent/10 py-12 md:py-16 text-center">
         <div className="max-w-2xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold mb-4 text-gray-800">Ready to Work Together?</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-gray-800">Ready to Work Together?</h2>
           <p className="text-gray-500 mb-8">Tell us your requirements and our professional team will get back to you within 24 hours.</p>
           <Link to="/inquiry" className="inline-block px-10 py-4 bg-brand text-white font-bold rounded-full hover:shadow-lg hover:shadow-brand/25 transition-all">
             Contact Us Now

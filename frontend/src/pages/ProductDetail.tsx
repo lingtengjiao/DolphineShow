@@ -49,7 +49,7 @@ export default function ProductDetail() {
       </nav>
 
       {/* Product main section */}
-      <div className="flex flex-col lg:flex-row gap-10 mb-16">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 mb-10 lg:mb-16">
         {/* Images */}
         <div className="lg:w-1/2">
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm mb-4">
@@ -76,7 +76,7 @@ export default function ProductDetail() {
 
         {/* Info */}
         <div className="lg:w-1/2">
-          <h1 className="text-2xl md:text-3xl font-extrabold font-bold text-gray-800 mb-2">{product.name}</h1>
+          <h1 className="text-xl md:text-3xl font-extrabold font-bold text-gray-800 mb-2">{product.name}</h1>
           <p className="text-sm text-gray-400 mb-6">SKU: #{product.sku}</p>
 
           <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
@@ -96,7 +96,7 @@ export default function ProductDetail() {
           {/* Specs */}
           <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
             <h3 className="font-bold text-gray-700 mb-4">Specifications</h3>
-            <dl className="grid grid-cols-2 gap-3 text-sm">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
               {product.material && (
                 <><dt className="text-gray-400">Material</dt><dd className="text-gray-700">{product.material}</dd></>
               )}
@@ -131,7 +131,7 @@ export default function ProductDetail() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link
               to={`/inquiry?product_id=${product.id}&product_name=${encodeURIComponent(product.name)}`}
               className="flex-1 py-3 bg-accent text-white text-center rounded-full font-medium hover:bg-accent-dark transition-colors shadow-lg"
@@ -143,7 +143,7 @@ export default function ProductDetail() {
                 navigator.clipboard.writeText(window.location.href)
                 alert('Link copied!')
               }}
-              className="px-6 py-3 border border-gray-300 rounded-full text-sm text-gray-600 hover:border-brand hover:text-brand transition-colors"
+              className="sm:px-6 py-3 border border-gray-300 rounded-full text-sm text-gray-600 hover:border-brand hover:text-brand transition-colors text-center"
             >
               Share
             </button>

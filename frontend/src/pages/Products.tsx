@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { FiFilter, FiX } from 'react-icons/fi'
 import { productApi, productLineApi } from '../api'
 import { useAuthStore } from '../store/auth'
 import ProductCard from '../components/product/ProductCard'
@@ -11,6 +12,7 @@ export default function Products() {
   const [data, setData] = useState<PaginatedProducts | null>(null)
   const [productLines, setProductLines] = useState<ProductLine[]>([])
   const [loading, setLoading] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
 
   const slug = searchParams.get('product_line_slug') || ''
   const search = searchParams.get('search') || ''
@@ -60,9 +62,48 @@ export default function Products() {
         <span className="text-gray-600">{title}</span>
       </nav>
 
+      {/* Mobile filter toggle */}
+      <div className="lg:hidden flex items-center justify-between mb-4">
+        <h2 className="text-xl font-extrabold text-gray-800">{title}</h2>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm text-gray-600 hover:border-brand hover:text-brand transition-colors"
+        >
+          {showFilters ? <FiX size={15} /> : <FiFilter size={15} />}
+          {showFilters ? 'Close' : 'Filter'}
+        </button>
+      </div>
+
+      {/* Mobile filter drawer */}
+      {showFilters && (
+        <div className="lg:hidden bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
+          <ul className="space-y-1">
+            <li>
+              <button
+                onClick={() => { const p = new URLSearchParams(); setSearchParams(p); setShowFilters(false) }}
+                className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${!slug && !isFeatured && !isNew ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
+              >
+                All Products
+              </button>
+            </li>
+            {productLines.map((pl) => (
+              <li key={pl.id}>
+                <button
+                  onClick={() => { setParam('product_line_slug', pl.slug); setShowFilters(false) }}
+                  className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${slug === pl.slug ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
+                >
+                  {pl.name}
+                  <span className="text-xs opacity-60 ml-1">({pl.product_count})</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar */}
-        <aside className="lg:w-56 flex-shrink-0">
+        {/* Sidebar - desktop only */}
+        <aside className="hidden lg:block lg:w-56 flex-shrink-0">
           <h2 className="text-xl font-extrabold font-bold text-gray-800 mb-4">{title}</h2>
           <ul className="space-y-1">
             <li>

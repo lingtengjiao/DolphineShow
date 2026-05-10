@@ -59,26 +59,26 @@ export default function Home() {
         >
           {banners.map((banner) => (
             <SwiperSlide key={banner.id}>
-              <div className={`relative bg-gradient-to-br ${banner.bg_gradient ?? DEFAULT_GRADIENT} min-h-[420px] md:min-h-[520px] flex`}>
+              <div className={`relative bg-gradient-to-br ${banner.bg_gradient ?? DEFAULT_GRADIENT} min-h-[300px] md:min-h-[520px] flex`}>
                 {/* Left text */}
-                <div className="relative z-10 flex flex-col justify-center px-8 md:px-16 lg:px-24 py-12 max-w-xl">
+                <div className="relative z-10 flex flex-col justify-center px-6 md:px-16 lg:px-24 py-10 md:py-12 max-w-xl">
                   {banner.tag && (
-                    <span className="inline-block px-3 py-1 bg-brand/15 text-brand text-xs font-bold rounded-full mb-4 w-fit">
+                    <span className="inline-block px-3 py-1 bg-brand/15 text-brand text-xs font-bold rounded-full mb-3 w-fit">
                       {banner.tag}
                     </span>
                   )}
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-800 leading-tight mb-4">
+                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-gray-800 leading-tight mb-3 md:mb-4">
                     {banner.title}
                   </h2>
                   {banner.subtitle && (
-                    <p className="text-gray-500 text-sm md:text-base mb-8 leading-relaxed whitespace-pre-line">
+                    <p className="text-gray-500 text-xs md:text-base mb-5 md:mb-8 leading-relaxed whitespace-pre-line line-clamp-3 md:line-clamp-none">
                       {banner.subtitle}
                     </p>
                   )}
                   {banner.cta_text && banner.cta_link && (
                     <Link
                       to={banner.cta_link}
-                      className="inline-flex items-center px-7 py-3 bg-gray-800 text-white text-sm font-semibold rounded hover:bg-brand transition-colors w-fit"
+                      className="inline-flex items-center px-5 md:px-7 py-2.5 md:py-3 bg-gray-800 text-white text-sm font-semibold rounded hover:bg-brand transition-colors w-fit"
                     >
                       {banner.cta_text}
                     </Link>
@@ -137,7 +137,7 @@ export default function Home() {
       )}
 
       {/* ── Featured / New Products ── */}
-      <section className="max-w-7xl mx-auto px-4 py-14">
+      <section className="max-w-7xl mx-auto px-4 py-8 md:py-14">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
             <button
@@ -186,7 +186,7 @@ export default function Home() {
       </section>
 
       {/* ── Product Lines Grid ── */}
-      <section className="bg-gray-50/60 py-14">
+      <section className="bg-gray-50/60 py-8 md:py-14">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-extrabold text-gray-800">Browse by Product Line</h2>
@@ -209,12 +209,12 @@ export default function Home() {
       </section>
 
       {/* ── Brand Promise Banner ── */}
-      <section className="py-14">
+      <section className="py-8 md:py-14">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="bg-gradient-to-br from-brand-light/30 via-white to-accent/10 rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
+          <div className="bg-gradient-to-br from-brand-light/30 via-white to-accent/10 rounded-3xl p-6 md:p-12 flex flex-col md:flex-row items-center gap-6 md:gap-8">
             <div className="text-6xl flex-shrink-0">🏭</div>
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-extrabold text-gray-800 mb-3">Trusted B2B Plush Toy Manufacturer</h2>
+              <h2 className="text-xl md:text-2xl font-extrabold text-gray-800 mb-3">Trusted B2B Plush Toy Manufacturer</h2>
               <p className="text-gray-500 leading-relaxed mb-5 max-w-2xl">
                 10+ years of export experience. Products certified by CE, CPC, ASTM and other international safety standards, exported to 50+ countries across Europe, America, Japan, Korea, and beyond.
                 Full OEM/ODM service — from creative design to bulk delivery.
@@ -233,7 +233,7 @@ export default function Home() {
       </section>
 
       {/* ── Quick Feature Cards ── */}
-      <section className="pb-14">
+      <section className="pb-8 md:pb-14">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[

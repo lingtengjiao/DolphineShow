@@ -67,17 +67,17 @@ export default function Inquiry() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
       <nav className="text-sm text-gray-400 mb-6">
         <Link to="/" className="hover:text-brand">Home</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-600">Inquiry</span>
       </nav>
 
-      <div className="grid md:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-3 gap-6 md:gap-10">
         {/* Form */}
         <div className="md:col-span-2">
-          <h1 className="text-3xl font-extrabold font-bold text-gray-800 mb-2">Contact Us</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold font-bold text-gray-800 mb-2">Contact Us</h1>
           <p className="text-gray-500 mb-8">Fill in the form below and our team will respond within 24 hours.</p>
 
           {productName && (
@@ -129,7 +129,7 @@ export default function Inquiry() {
 
         {/* Contact info */}
         <div>
-          <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-32">
+          <div className="bg-white rounded-2xl p-6 shadow-sm md:sticky md:top-32">
             <h3 className="font-bold text-gray-700 mb-6">Other Ways to Reach Us</h3>
             <div className="space-y-5">
               <div className="flex gap-3">

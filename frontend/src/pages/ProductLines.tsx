@@ -23,7 +23,7 @@ export default function ProductLines() {
         <span className="text-gray-600">All Product Lines</span>
       </nav>
 
-      <h1 className="text-3xl font-extrabold font-bold text-gray-800 mb-8">All Product Lines</h1>
+      <h1 className="text-2xl md:text-3xl font-extrabold font-bold text-gray-800 mb-6 md:mb-8">All Product Lines</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {lines.map((pl) => (

@@ -50,8 +50,8 @@ export default function ProductLineDetail() {
 
       {/* Product line header */}
       {productLine && (
-        <div className="bg-white rounded-2xl p-8 shadow-sm mb-8">
-          <h1 className="text-3xl font-extrabold font-bold text-gray-800 mb-3">{productLine.name}</h1>
+        <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-extrabold font-bold text-gray-800 mb-3">{productLine.name}</h1>
           {productLine.description && (
             <p className="text-gray-600 leading-relaxed">{productLine.description}</p>
           )}

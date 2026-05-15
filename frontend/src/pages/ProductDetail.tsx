@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import 'swiper/css'
@@ -19,6 +20,79 @@ export default function ProductDetail() {
   const [related, setRelated] = useState<Product[]>([])
   const [selectedImage, setSelectedImage] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [shareOpen, setShareOpen] = useState(false)
+  const shareInputRef = useRef<HTMLInputElement>(null)
+
+  const shareUrl =
+    typeof window !== 'undefined' && id
+      ? `${window.location.origin}/products/${id}`
+      : ''
+
+  const copyShareLink = useCallback(async (url: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+        return true
+      }
+    } catch {
+      /* fallback below */
+    }
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = url
+      textarea.style.position = 'fixed'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(textarea)
+      return ok
+    } catch {
+      return false
+    }
+  }, [])
+
+  const handleShare = useCallback(async () => {
+    if (!shareUrl || !product) return
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: `Check out ${product.name}`,
+          url: shareUrl,
+        })
+        return
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+      }
+    }
+
+    setShareOpen(true)
+    const copied = await copyShareLink(shareUrl)
+    if (copied) toast.success('Link copied to clipboard!')
+  }, [shareUrl, product, copyShareLink])
+
+  const handleCopyFromModal = useCallback(async () => {
+    if (!shareUrl) return
+    const copied = await copyShareLink(shareUrl)
+    if (copied) {
+      toast.success('Link copied to clipboard!')
+    } else {
+      shareInputRef.current?.focus()
+      shareInputRef.current?.select()
+      toast.error('Could not copy automatically. Please copy the link manually.')
+    }
+  }, [shareUrl, copyShareLink])
+
+  useEffect(() => {
+    if (!shareOpen) return
+    const timer = window.setTimeout(() => {
+      shareInputRef.current?.focus()
+      shareInputRef.current?.select()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [shareOpen])
 
   useEffect(() => {
     if (!id) return
@@ -139,10 +213,8 @@ export default function ProductDetail() {
               Send Inquiry
             </Link>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href)
-                alert('Link copied!')
-              }}
+              type="button"
+              onClick={handleShare}
               className="sm:px-6 py-3 border border-gray-300 rounded-full text-sm text-gray-600 hover:border-brand hover:text-brand transition-colors text-center"
             >
               Share
@@ -150,6 +222,52 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {shareOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-dialog-title"
+          onClick={() => setShareOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="share-dialog-title" className="text-lg font-bold text-gray-800 mb-1">
+              Share Product
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Copy this link to share with colleagues or customers.
+            </p>
+            <div className="flex gap-2">
+              <input
+                ref={shareInputRef}
+                type="text"
+                readOnly
+                value={shareUrl}
+                className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                onFocus={(e) => e.target.select()}
+              />
+              <button
+                type="button"
+                onClick={handleCopyFromModal}
+                className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand/90 transition-colors shrink-0"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShareOpen(false)}
+              className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Description */}
       {product.description && (

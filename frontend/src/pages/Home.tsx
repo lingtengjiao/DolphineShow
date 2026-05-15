@@ -69,7 +69,7 @@ export default function Home() {
                       className="absolute inset-0 w-full h-full object-cover object-center"
                     />
                     {/* 左侧渐变遮罩，保证文字可读 */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent" />
                     {/* 文字浮层 */}
                     <div className="relative z-10 flex flex-col justify-center h-full min-h-[320px] md:min-h-[520px] px-6 md:px-16 lg:px-24 py-10 max-w-2xl">
                       {banner.tag && (

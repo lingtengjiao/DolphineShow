@@ -9,7 +9,6 @@ import { bannerApi, productApi, productLineApi } from '../api'
 import { useAuthStore } from '../store/auth'
 import ProductCard from '../components/product/ProductCard'
 import type { Banner, Product, ProductLine } from '../types'
-import heroBanner from '../assets/hero-banner.png'
 
 const LINE_ICONS = ['🧸', '🐳', '🦊', '🎨', '🎄', '👶', '🦕', '🎵']
 const LINE_COLORS = [
@@ -57,44 +56,76 @@ export default function Home() {
           loop
           className="w-full"
         >
-          {banners.map((banner) => (
-            <SwiperSlide key={banner.id}>
-              <div className={`relative bg-gradient-to-br ${banner.bg_gradient ?? DEFAULT_GRADIENT} min-h-[300px] md:min-h-[520px] flex`}>
-                {/* Left text */}
-                <div className="relative z-10 flex flex-col justify-center px-6 md:px-16 lg:px-24 py-10 md:py-12 max-w-xl">
-                  {banner.tag && (
-                    <span className="inline-block px-3 py-1 bg-brand/15 text-brand text-xs font-bold rounded-full mb-3 w-fit">
-                      {banner.tag}
-                    </span>
-                  )}
-                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-gray-800 leading-tight mb-3 md:mb-4">
-                    {banner.title}
-                  </h2>
-                  {banner.subtitle && (
-                    <p className="text-gray-500 text-xs md:text-base mb-5 md:mb-8 leading-relaxed whitespace-pre-line line-clamp-3 md:line-clamp-none">
-                      {banner.subtitle}
-                    </p>
-                  )}
-                  {banner.cta_text && banner.cta_link && (
-                    <Link
-                      to={banner.cta_link}
-                      className="inline-flex items-center px-5 md:px-7 py-2.5 md:py-3 bg-gray-800 text-white text-sm font-semibold rounded hover:bg-brand transition-colors w-fit"
-                    >
-                      {banner.cta_text}
-                    </Link>
-                  )}
-                </div>
-                {/* Right image */}
-                <div className="absolute right-0 top-0 bottom-0 w-1/2 md:w-[55%] hidden md:block">
-                  <img
-                    src={banner.image_url ?? heroBanner}
-                    alt={banner.title}
-                    className="w-full h-full object-cover object-left"
-                  />
-                </div>
-              </div>
-            </SwiperSlide>
-          ))}
+          {banners.map((banner) => {
+            const hasImage = !!banner.image_url
+            return (
+              <SwiperSlide key={banner.id}>
+                {hasImage ? (
+                  /* ── 全屏横幅模式：图片铺满，文字浮层 ── */
+                  <div className="relative min-h-[320px] md:min-h-[520px] overflow-hidden">
+                    <img
+                      src={banner.image_url!}
+                      alt={banner.title}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+                    {/* 左侧渐变遮罩，保证文字可读 */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent" />
+                    {/* 文字浮层 */}
+                    <div className="relative z-10 flex flex-col justify-center h-full min-h-[320px] md:min-h-[520px] px-6 md:px-16 lg:px-24 py-10 max-w-2xl">
+                      {banner.tag && (
+                        <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-bold rounded-full mb-4 w-fit border border-white/30">
+                          {banner.tag}
+                        </span>
+                      )}
+                      <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-3 md:mb-4 drop-shadow-sm">
+                        {banner.title}
+                      </h2>
+                      {banner.subtitle && (
+                        <p className="text-white/80 text-sm md:text-base mb-6 md:mb-8 leading-relaxed whitespace-pre-line max-w-md">
+                          {banner.subtitle}
+                        </p>
+                      )}
+                      {banner.cta_text && banner.cta_link && (
+                        <Link
+                          to={banner.cta_link}
+                          className="inline-flex items-center px-6 py-3 bg-white text-gray-900 text-sm font-bold rounded hover:bg-brand hover:text-white transition-colors w-fit shadow-lg"
+                        >
+                          {banner.cta_text}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* ── 纯色渐变模式（未上传图片时）── */
+                  <div className={`relative bg-gradient-to-br ${banner.bg_gradient ?? DEFAULT_GRADIENT} min-h-[320px] md:min-h-[520px] flex items-center`}>
+                    <div className="relative z-10 flex flex-col justify-center px-6 md:px-16 lg:px-24 py-10 max-w-xl">
+                      {banner.tag && (
+                        <span className="inline-block px-3 py-1 bg-brand/15 text-brand text-xs font-bold rounded-full mb-4 w-fit">
+                          {banner.tag}
+                        </span>
+                      )}
+                      <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-gray-800 leading-tight mb-3 md:mb-4">
+                        {banner.title}
+                      </h2>
+                      {banner.subtitle && (
+                        <p className="text-gray-500 text-sm md:text-base mb-6 md:mb-8 leading-relaxed whitespace-pre-line">
+                          {banner.subtitle}
+                        </p>
+                      )}
+                      {banner.cta_text && banner.cta_link && (
+                        <Link
+                          to={banner.cta_link}
+                          className="inline-flex items-center px-6 py-3 bg-gray-800 text-white text-sm font-bold rounded hover:bg-brand transition-colors w-fit"
+                        >
+                          {banner.cta_text}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </SwiperSlide>
+            )
+          })}
         </Swiper>
 
         {/* Custom navigation arrows */}

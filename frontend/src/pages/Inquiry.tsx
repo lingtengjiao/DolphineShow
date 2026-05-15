@@ -166,7 +166,7 @@ export default function Inquiry() {
                 <span className="text-xl">🏢</span>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Office Address</p>
-                  <p className="text-sm text-gray-500">NO.70365# 5F, District 5, International Trade City, YiWu, ZheJiang, China</p>
+                  <p className="text-sm text-gray-500">Room 805, Building T6, Global Digital Trade Center, Zone 6, Yiwu International Trade City, Zhejiang Province, China</p>
                 </div>
               </div>
               <div className="flex gap-3">

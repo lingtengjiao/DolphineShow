@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { FiPlus, FiEdit2, FiTrash2, FiUpload, FiImage, FiToggleLeft, FiToggleRight } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiUpload, FiImage, FiToggleLeft, FiToggleRight, FiInfo } from 'react-icons/fi'
 import { bannerApi, uploadApi } from '../../api'
 import type { Banner } from '../../types'
 import PageHeader from '../../components/admin/PageHeader'
@@ -157,7 +157,7 @@ export default function BannerAdmin() {
     <div>
       <PageHeader
         title="Banner 管理"
-        subtitle="管理首页轮播 Banner，支持标题、副标题、按钮、背景图和渐变色。"
+        subtitle="管理首页全屏横幅轮播，图片铺满全屏，文字叠加在图片上方。"
         actions={
           <button
             onClick={openCreate}
@@ -167,6 +167,38 @@ export default function BannerAdmin() {
           </button>
         }
       />
+
+      {/* 图片规格说明 */}
+      <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3">
+        <FiInfo size={18} className="text-blue-400 flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-blue-700 space-y-1.5">
+          <p className="font-semibold">Banner 图片制作规格</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-1 text-blue-600">
+            <div>
+              <span className="font-medium">推荐尺寸：</span>
+              <span className="font-bold text-blue-800">1920 × 600 px</span>
+            </div>
+            <div>
+              <span className="font-medium">最小尺寸：</span>1200 × 400 px
+            </div>
+            <div>
+              <span className="font-medium">文件格式：</span>JPG / PNG / WebP
+            </div>
+            <div>
+              <span className="font-medium">文件大小：</span>建议 ≤ 3 MB
+            </div>
+            <div>
+              <span className="font-medium">宽高比例：</span>约 16 : 5
+            </div>
+            <div>
+              <span className="font-medium">色彩模式：</span>RGB（sRGB）
+            </div>
+          </div>
+          <p className="text-blue-500 text-xs pt-0.5">
+            ⚠️ 图片采用<strong>居中裁切</strong>（object-cover）—— 主体内容请放置在图片中央区域，两侧留出安全边距约 200px，避免文字叠加区域（左侧 40% 宽度）有重要视觉元素。
+          </p>
+        </div>
+      </div>
 
       {loading ? (
         <TableSkeleton rows={3} />
@@ -334,8 +366,13 @@ export default function BannerAdmin() {
 
             {/* Banner image */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Banner 图片</label>
-              <p className="text-[11px] text-gray-400 mb-2">建议尺寸 <span className="font-medium text-gray-500">1200 × 480 px</span>，比例 5:2 宽横幅，JPG / PNG / WebP，≤ 3 MB</p>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Banner 图片
+                <span className="ml-2 font-normal text-blue-500">推荐 1920 × 600 px · 16:5 · JPG/PNG/WebP · ≤ 3 MB</span>
+              </label>
+              <p className="text-[11px] text-amber-600 bg-amber-50 rounded-lg px-2.5 py-1.5 mb-2">
+                💡 主体内容居中放置，左侧约 40% 区域会被文字遮挡，请预留安全空间。
+              </p>
               <div className="flex items-center gap-3">
                 {editing.image_url && (
                   <img src={editing.image_url} alt="preview" className="w-24 h-14 object-cover rounded-lg border border-gray-200" />

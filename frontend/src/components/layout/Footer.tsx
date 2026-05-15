@@ -38,7 +38,7 @@ export default function Footer() {
             <li>👤 Jeckey Song（Sales Dept）</li>
             <li>📞 +86-579-85373662 / +86-18657997522</li>
             <li>✉️ admin@dolphineshow.com</li>
-            <li>📍 NO.70365# 5F, District 5, International Trade City, YiWu, ZheJiang, China</li>
+            <li>📍 Room 805, Building T6, Global Digital Trade Center, Zone 6, Yiwu International Trade City, Zhejiang Province, China</li>
             <li>🕐 Mon–Fri 9:00–18:00 (GMT+8)</li>
           </ul>
         </div>

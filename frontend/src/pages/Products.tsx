@@ -1,10 +1,80 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { FiFilter, FiX } from 'react-icons/fi'
+import { FiFilter, FiX, FiChevronDown, FiChevronRight } from 'react-icons/fi'
 import { productApi, productLineApi } from '../api'
 import { useAuthStore } from '../store/auth'
 import ProductCard from '../components/product/ProductCard'
 import type { ProductLine, PaginatedProducts } from '../types'
+
+function SidebarItem({
+  pl,
+  slug,
+  setParam,
+  onClose,
+}: {
+  pl: ProductLine
+  slug: string
+  setParam: (key: string, value: string) => void
+  onClose?: () => void
+}) {
+  const hasChildren = (pl.children?.length ?? 0) > 0
+  const isParentActive = slug === pl.slug
+  const isChildActive = pl.children?.some((c) => c.slug === slug) ?? false
+  const [open, setOpen] = useState(isParentActive || isChildActive)
+
+  useEffect(() => {
+    if (isParentActive || isChildActive) setOpen(true)
+  }, [isParentActive, isChildActive])
+
+  const handleClick = () => {
+    setParam('product_line_slug', pl.slug)
+    onClose?.()
+  }
+
+  return (
+    <li>
+      <div className="flex items-center">
+        <button
+          onClick={handleClick}
+          className={`flex-1 text-left px-3 py-2 rounded text-sm transition-colors ${
+            isParentActive ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'
+          }`}
+        >
+          {pl.name}
+          {!hasChildren && (
+            <span className="text-xs opacity-60 ml-1">({pl.product_count})</span>
+          )}
+        </button>
+        {hasChildren && (
+          <button
+            onClick={() => setOpen(!open)}
+            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-brand transition-colors shrink-0"
+          >
+            {open ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
+          </button>
+        )}
+      </div>
+
+      {hasChildren && open && (
+        <ul className="ml-3 mt-0.5 space-y-0.5 border-l border-gray-100 pl-2">
+          {pl.children!.map((child) => (
+            <li key={child.id}>
+              <button
+                onClick={() => { setParam('product_line_slug', child.slug); onClose?.() }}
+                className={`block w-full text-left px-3 py-1.5 rounded text-[13px] transition-colors ${
+                  slug === child.slug ? 'bg-brand text-white' : 'text-gray-500 hover:bg-brand-light/20'
+                }`}
+              >
+                {child.name}
+                <span className="text-xs opacity-60 ml-1">({child.product_count})</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
 
 export default function Products() {
   const { user } = useAuthStore()
@@ -23,7 +93,7 @@ export default function Products() {
   const pageSize = parseInt(searchParams.get('page_size') || '16')
 
   useEffect(() => {
-    productLineApi.list().then((r) => setProductLines(r.data)).catch(() => {})
+    productLineApi.tree().then((r) => setProductLines(r.data)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -52,7 +122,34 @@ export default function Products() {
     setSearchParams(params)
   }
 
-  const title = isFeatured ? 'Featured' : isNew ? 'New Arrivals' : slug ? productLines.find(pl => pl.slug === slug)?.name || 'Products' : search ? `Search: ${search}` : 'All Products'
+  const allLines = productLines.flatMap((pl) => [pl, ...(pl.children ?? [])])
+  const title = isFeatured
+    ? 'Featured'
+    : isNew
+    ? 'New Arrivals'
+    : slug
+    ? allLines.find((pl) => pl.slug === slug)?.name || 'Products'
+    : search
+    ? `Search: ${search}`
+    : 'All Products'
+
+  const sidebarContent = (onClose?: () => void) => (
+    <ul className="space-y-0.5">
+      <li>
+        <button
+          onClick={() => { const p = new URLSearchParams(); setSearchParams(p); onClose?.() }}
+          className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+            !slug && !isFeatured && !isNew ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'
+          }`}
+        >
+          All Products
+        </button>
+      </li>
+      {productLines.map((pl) => (
+        <SidebarItem key={pl.id} pl={pl} slug={slug} setParam={setParam} onClose={onClose} />
+      ))}
+    </ul>
+  )
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
@@ -77,27 +174,7 @@ export default function Products() {
       {/* Mobile filter drawer */}
       {showFilters && (
         <div className="lg:hidden bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-100">
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => { const p = new URLSearchParams(); setSearchParams(p); setShowFilters(false) }}
-                className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${!slug && !isFeatured && !isNew ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
-              >
-                All Products
-              </button>
-            </li>
-            {productLines.map((pl) => (
-              <li key={pl.id}>
-                <button
-                  onClick={() => { setParam('product_line_slug', pl.slug); setShowFilters(false) }}
-                  className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${slug === pl.slug ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
-                >
-                  {pl.name}
-                  <span className="text-xs opacity-60 ml-1">({pl.product_count})</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {sidebarContent(() => setShowFilters(false))}
         </div>
       )}
 
@@ -105,27 +182,7 @@ export default function Products() {
         {/* Sidebar - desktop only */}
         <aside className="hidden lg:block lg:w-56 flex-shrink-0">
           <h2 className="text-xl font-extrabold font-bold text-gray-800 mb-4">{title}</h2>
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => { const p = new URLSearchParams(); setSearchParams(p) }}
-                className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${!slug && !isFeatured && !isNew ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
-              >
-                All Products
-              </button>
-            </li>
-            {productLines.map((pl) => (
-              <li key={pl.id}>
-                <button
-                  onClick={() => setParam('product_line_slug', pl.slug)}
-                  className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${slug === pl.slug ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
-                >
-                  {pl.name}
-                  <span className="text-xs opacity-60 ml-1">({pl.product_count})</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {sidebarContent()}
         </aside>
 
         {/* Main content */}
@@ -187,7 +244,9 @@ export default function Products() {
                         <button
                           key={p}
                           onClick={() => setParam('page', String(p))}
-                          className={`w-9 h-9 rounded-full text-sm font-medium transition-colors ${p === page ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'}`}
+                          className={`w-9 h-9 rounded-full text-sm font-medium transition-colors ${
+                            p === page ? 'bg-brand text-white' : 'text-gray-600 hover:bg-brand-light/20'
+                          }`}
                         >
                           {p}
                         </button>

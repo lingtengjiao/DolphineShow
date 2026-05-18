@@ -17,6 +17,7 @@ export interface TokenResponse {
 
 export interface ProductLine {
   id: number
+  parent_id: number | null
   name: string
   slug: string
   description: string | null
@@ -25,6 +26,7 @@ export interface ProductLine {
   is_active: boolean
   product_count: number
   created_at: string
+  children?: ProductLine[]
 }
 
 export interface Product {

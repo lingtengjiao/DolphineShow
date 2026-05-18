@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -5,6 +7,7 @@ from pydantic import BaseModel
 
 class ProductLineCreate(BaseModel):
     name: str
+    parent_id: int | None = None
     description: str | None = None
     cover_image: str | None = None
     sort_order: int = 0
@@ -13,6 +16,7 @@ class ProductLineCreate(BaseModel):
 
 class ProductLineUpdate(BaseModel):
     name: str | None = None
+    parent_id: int | None = None
     description: str | None = None
     cover_image: str | None = None
     sort_order: int | None = None
@@ -21,6 +25,7 @@ class ProductLineUpdate(BaseModel):
 
 class ProductLineOut(BaseModel):
     id: int
+    parent_id: int | None
     name: str
     slug: str
     description: str | None
@@ -31,3 +36,13 @@ class ProductLineOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ProductLineTree(ProductLineOut):
+    """Parent product line with nested children."""
+    children: list[ProductLineTree] = []
+
+    model_config = {"from_attributes": True}
+
+
+ProductLineTree.model_rebuild()

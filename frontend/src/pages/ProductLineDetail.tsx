@@ -38,12 +38,22 @@ export default function ProductLineDetail() {
     setSearchParams(params)
   }
 
+  const hasChildren = (productLine?.children?.length ?? 0) > 0
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
       <nav className="text-sm text-gray-400 mb-6">
         <Link to="/" className="hover:text-brand">Home</Link>
         <span className="mx-2">/</span>
         <Link to="/product-lines" className="hover:text-brand">All Product Lines</Link>
+        {productLine?.parent_id && (
+          <>
+            <span className="mx-2">/</span>
+            <Link to="/product-lines" className="hover:text-brand">
+              {/* breadcrumb parent handled below */}
+            </Link>
+          </>
+        )}
         <span className="mx-2">/</span>
         <span className="text-gray-600">{productLine?.name || slug}</span>
       </nav>
@@ -56,6 +66,36 @@ export default function ProductLineDetail() {
             <p className="text-gray-600 leading-relaxed">{productLine.description}</p>
           )}
           <p className="text-sm text-gray-400 mt-3">{productLine.product_count} products total</p>
+        </div>
+      )}
+
+      {/* Sub-categories section (only for parent lines with children) */}
+      {hasChildren && (
+        <div className="mb-8">
+          <h2 className="text-base font-semibold text-gray-700 mb-4">Sub-categories</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {productLine!.children!.map((child) => (
+              <Link
+                key={child.id}
+                to={`/product-lines/${child.slug}`}
+                className="group bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <div className="aspect-[3/2] bg-brand-light/10 flex items-center justify-center">
+                  {child.cover_image ? (
+                    <img src={child.cover_image} alt={child.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl">🧸</span>
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-semibold text-gray-700 group-hover:text-brand transition-colors line-clamp-1">
+                    {child.name}
+                  </p>
+                  <p className="text-xs text-brand mt-0.5">{child.product_count} products</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

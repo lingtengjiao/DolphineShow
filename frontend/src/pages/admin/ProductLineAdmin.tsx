@@ -11,6 +11,7 @@ import TableSkeleton from '../../components/admin/TableSkeleton'
 
 interface PLForm {
   id?: number
+  parent_id: number | null
   name: string
   description: string
   cover_image: string
@@ -18,7 +19,7 @@ interface PLForm {
   is_active: boolean
 }
 
-const emptyForm: PLForm = { name: '', description: '', cover_image: '', sort_order: 0, is_active: true }
+const emptyForm: PLForm = { parent_id: null, name: '', description: '', cover_image: '', sort_order: 0, is_active: true }
 
 export default function ProductLineAdmin() {
   const [lines, setLines] = useState<ProductLine[]>([])
@@ -39,6 +40,7 @@ export default function ProductLineAdmin() {
   const handleEdit = (pl: ProductLine) => {
     setEditing({
       id: pl.id,
+      parent_id: pl.parent_id,
       name: pl.name,
       description: pl.description || '',
       cover_image: pl.cover_image || '',
@@ -128,6 +130,24 @@ export default function ProductLineAdmin() {
       >
         {editing && (
           <div className="space-y-5">
+            {/* Parent selector */}
+            <div>
+              <label className="block text-[13px] font-medium text-gray-600 mb-1.5">父级产品线</label>
+              <select
+                value={editing.parent_id ?? ''}
+                onChange={(e) => setEditing({ ...editing, parent_id: e.target.value ? Number(e.target.value) : null })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all bg-white"
+              >
+                <option value="">— 顶级产品线（无父级）—</option>
+                {lines
+                  .filter((l) => !l.parent_id && l.id !== editing.id)
+                  .map((l) => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+              </select>
+              <p className="text-[11px] text-gray-400 mt-1">选择父级后该产品线为二级子系列，最多支持两级</p>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[13px] font-medium text-gray-600 mb-1.5">产品线名称 *</label>
@@ -246,7 +266,17 @@ export default function ProductLineAdmin() {
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-[13px] font-semibold text-gray-700">{pl.name}</span>
+                    {pl.parent_id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-300 text-base">└</span>
+                        <span className="text-[13px] font-medium text-gray-600">{pl.name}</span>
+                        <span className="text-[11px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
+                          子系列
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[13px] font-semibold text-gray-700">{pl.name}</span>
+                    )}
                   </td>
                   <td className="px-5 py-3.5 hidden md:table-cell">
                     <code className="text-[12px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded">{pl.slug}</code>

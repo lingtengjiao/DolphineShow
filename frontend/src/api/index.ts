@@ -22,6 +22,7 @@ export const authApi = {
 
 export const productLineApi = {
   list: () => client.get<ProductLine[]>('/api/product-lines'),
+  tree: () => client.get<ProductLine[]>('/api/product-lines/tree'),
   get: (slug: string) => client.get<ProductLine>(`/api/product-lines/${slug}`),
   adminList: () => client.get<ProductLine[]>('/api/product-lines/admin/all'),
   create: (data: Partial<ProductLine>) => client.post<ProductLine>('/api/product-lines/admin', data),

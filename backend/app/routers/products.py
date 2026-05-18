@@ -53,9 +53,27 @@ async def list_products(
     query = select(Product).options(selectinload(Product.product_line)).where(Product.is_active.is_(True))
 
     if product_line_id:
-        query = query.where(Product.product_line_id == product_line_id)
+        # Include products from sub-lines as well
+        child_ids_result = await db.execute(
+            select(ProductLine.id).where(ProductLine.parent_id == product_line_id)
+        )
+        child_ids = [r for (r,) in child_ids_result.all()]
+        all_ids = [product_line_id] + child_ids
+        query = query.where(Product.product_line_id.in_(all_ids))
     if product_line_slug:
-        query = query.join(ProductLine).where(ProductLine.slug == product_line_slug)
+        # Resolve slug → id, then include sub-lines
+        pl_result = await db.execute(
+            select(ProductLine.id, ProductLine.parent_id).where(ProductLine.slug == product_line_slug)
+        )
+        pl_row = pl_result.one_or_none()
+        if pl_row:
+            pl_id_val = pl_row[0]
+            child_ids_result = await db.execute(
+                select(ProductLine.id).where(ProductLine.parent_id == pl_id_val)
+            )
+            child_ids = [r for (r,) in child_ids_result.all()]
+            all_ids = [pl_id_val] + child_ids
+            query = query.where(Product.product_line_id.in_(all_ids))
     if is_featured is not None:
         query = query.where(Product.is_featured == is_featured)
     if is_new is not None:

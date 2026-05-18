@@ -24,7 +24,7 @@ jobs:
             --exclude='./backend/uploads' \
             --exclude='./__pycache__' \
             --exclude='./.venv' \
-            .
+            . || [ $? -eq 1 ]
           ls -lh deploy.tar.gz
 
       - name: Upload tarball to server

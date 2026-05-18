@@ -3,6 +3,4 @@ __pycache__
 .env
 uploads/*
 !uploads/.gitkeep
-alembic/versions/*.py
-!alembic/versions/.gitkeep
 .venv

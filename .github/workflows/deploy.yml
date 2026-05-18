@@ -11,30 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Copy files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: "."
-          target: ${{ secrets.DEPLOY_PATH }}
-          rm: false
-
-      - name: Deploy with Docker Compose
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
+          command_timeout: 20m
+          envs: GITHUB_TOKEN
           script: |
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
+
+            # 拉取最新代码（使用 token 认证）
+            git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/lingtengjiao/DolphineShow.git
+            git fetch origin main
+            git reset --hard origin/main
 
             # 写入生产环境变量
             printf '%s\n' \
@@ -50,20 +43,6 @@ jobs:
               "TOS_ENDPOINT=tos-cn-shanghai.volces.com" \
               > backend/.env
 
-            # 修正 Docker 镜像源
-            mkdir -p /etc/docker
-            printf '%s\n' \
-              '{' \
-              '  "registry-mirrors": [' \
-              '    "https://docker.1ms.run",' \
-              '    "https://dockerpull.org",' \
-              '    "https://hub.rat.dev"' \
-              '  ]' \
-              '}' \
-              > /etc/docker/daemon.json
-            systemctl daemon-reload || true
-            systemctl restart docker
-
             # 构建并启动服务
             docker compose up --build -d
 
@@ -71,3 +50,5 @@ jobs:
             docker image prune -f
 
             echo "✅ Deployment completed!"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

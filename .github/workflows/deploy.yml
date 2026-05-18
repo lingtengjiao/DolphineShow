@@ -11,7 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Package code
+        run: |
+          tar czf /tmp/deploy.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='frontend/dist' \
+            --exclude='backend/uploads' \
+            --exclude='__pycache__' \
+            --exclude='.venv' \
+            .
+          ls -lh /tmp/deploy.tar.gz
+
+      - name: Upload tarball to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "/tmp/deploy.tar.gz"
+          target: "/tmp"
+          strip_components: 1
+
+      - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -21,16 +47,11 @@ jobs:
           command_timeout: 20m
           script: |
             set -e
-
-            # 配置 git 安全目录
-            git config --global --add safe.directory ${{ secrets.DEPLOY_PATH }}
-
             cd ${{ secrets.DEPLOY_PATH }}
 
-            # 拉取最新代码（使用 token 认证）
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/lingtengjiao/DolphineShow.git
-            git fetch origin main
-            git reset --hard origin/main
+            # 解压最新代码（覆盖现有文件，但保留 uploads/db 等数据）
+            tar xzf /tmp/deploy.tar.gz -C ${{ secrets.DEPLOY_PATH }}
+            rm -f /tmp/deploy.tar.gz
 
             # 写入生产环境变量
             printf '%s\n' \

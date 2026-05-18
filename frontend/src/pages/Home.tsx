@@ -10,7 +10,8 @@ import { useAuthStore } from '../store/auth'
 import ProductCard from '../components/product/ProductCard'
 import type { Banner, Product, ProductLine } from '../types'
 
-const LINE_ICONS = ['🧸', '🐳', '🦊', '🎨', '🎄', '👶', '🦕', '🎵']
+// 13 icons matching the 13 top-level product lines
+const LINE_ICONS = ['🎨', '🧸', '🐻', '🧶', '🐾', '👧', '🎭', '🔑', '🎁', '🤚', '🛏️', '🎒', '🐕']
 const LINE_COLORS = [
   'from-pink-100 to-rose-50',
   'from-blue-100 to-cyan-50',
@@ -20,6 +21,11 @@ const LINE_COLORS = [
   'from-yellow-100 to-lime-50',
   'from-teal-100 to-cyan-50',
   'from-indigo-100 to-blue-50',
+  'from-red-100 to-pink-50',
+  'from-amber-100 to-orange-50',
+  'from-lime-100 to-green-50',
+  'from-sky-100 to-blue-50',
+  'from-fuchsia-100 to-purple-50',
 ]
 
 const DEFAULT_GRADIENT = 'from-rose-50 via-pink-50 to-amber-50'
@@ -36,7 +42,7 @@ export default function Home() {
     bannerApi.list().then((r) => setBanners(r.data)).catch(() => {})
     productApi.featured(10).then((r) => setFeatured(r.data)).catch(() => {})
     productApi.newProducts(10).then((r) => setNewProducts(r.data)).catch(() => {})
-    productLineApi.list().then((r) => setProductLines(r.data)).catch(() => {})
+    productLineApi.tree().then((r) => setProductLines(r.data)).catch(() => {})
   }, [])
 
   const displayProducts = activeTab === 'featured' ? featured : newProducts

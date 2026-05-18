@@ -15,7 +15,7 @@ export default function Header() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    productLineApi.list().then((r) => setProductLines(r.data)).catch(() => {})
+    productLineApi.tree().then((r) => setProductLines(r.data)).catch(() => {})
   }, [])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -122,17 +122,32 @@ export default function Header() {
                 All Product Lines
               </Link>
               {showDropdown && productLines.length > 0 && (
-                <div className="absolute left-0 top-full bg-white shadow-lg shadow-gray-200/50 rounded-xl min-w-56 py-2 z-50 border border-gray-100">
+                <div className="absolute left-0 top-full bg-white shadow-lg shadow-gray-200/50 rounded-xl min-w-64 py-2 z-50 border border-gray-100 max-h-[70vh] overflow-y-auto">
                   {productLines.map((pl) => (
-                    <Link
-                      key={pl.id}
-                      to={`/product-lines/${pl.slug}`}
-                      className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-brand/5 hover:text-brand transition-all"
-                      onClick={() => setShowDropdown(false)}
-                    >
-                      {pl.name}
-                      <span className="text-xs text-gray-300 ml-2">({pl.product_count})</span>
-                    </Link>
+                    <div key={pl.id}>
+                      <Link
+                        to={`/product-lines/${pl.slug}`}
+                        className="flex items-center justify-between px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-brand/5 hover:text-brand transition-all"
+                        onClick={() => setShowDropdown(false)}
+                      >
+                        <span>{pl.name}</span>
+                        <span className="text-xs text-gray-300 font-normal ml-2">({pl.product_count})</span>
+                      </Link>
+                      {pl.children && pl.children.length > 0 && pl.children.map((child) => (
+                        <Link
+                          key={child.id}
+                          to={`/product-lines/${child.slug}`}
+                          className="flex items-center justify-between pl-8 pr-4 py-1.5 text-xs text-gray-500 hover:bg-brand/5 hover:text-brand transition-all"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-gray-300">└</span>
+                            {child.name}
+                          </span>
+                          <span className="text-gray-300 ml-2">({child.product_count})</span>
+                        </Link>
+                      ))}
+                    </div>
                   ))}
                 </div>
               )}

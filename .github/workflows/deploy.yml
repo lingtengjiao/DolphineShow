@@ -19,13 +19,16 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           command_timeout: 20m
-          envs: GITHUB_TOKEN
           script: |
             set -e
+
+            # 配置 git 安全目录
+            git config --global --add safe.directory ${{ secrets.DEPLOY_PATH }}
+
             cd ${{ secrets.DEPLOY_PATH }}
 
             # 拉取最新代码（使用 token 认证）
-            git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/lingtengjiao/DolphineShow.git
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/lingtengjiao/DolphineShow.git
             git fetch origin main
             git reset --hard origin/main
 
@@ -50,5 +53,3 @@ jobs:
             docker image prune -f
 
             echo "✅ Deployment completed!"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

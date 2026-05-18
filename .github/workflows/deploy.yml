@@ -16,7 +16,7 @@ jobs:
 
       - name: Package code
         run: |
-          tar czf /tmp/deploy.tar.gz \
+          tar czf deploy.tar.gz \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='frontend/dist' \
@@ -24,7 +24,7 @@ jobs:
             --exclude='__pycache__' \
             --exclude='.venv' \
             .
-          ls -lh /tmp/deploy.tar.gz
+          ls -lh deploy.tar.gz
 
       - name: Upload tarball to server
         uses: appleboy/scp-action@v0.1.7
@@ -33,9 +33,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "/tmp/deploy.tar.gz"
+          source: "deploy.tar.gz"
           target: "/tmp"
-          strip_components: 1
 
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.0.3

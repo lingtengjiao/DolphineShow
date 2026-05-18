@@ -17,12 +17,13 @@ jobs:
       - name: Package code
         run: |
           tar czf deploy.tar.gz \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='frontend/dist' \
-            --exclude='backend/uploads' \
-            --exclude='__pycache__' \
-            --exclude='.venv' \
+            --exclude='./deploy.tar.gz' \
+            --exclude='./.git' \
+            --exclude='./node_modules' \
+            --exclude='./frontend/dist' \
+            --exclude='./backend/uploads' \
+            --exclude='./__pycache__' \
+            --exclude='./.venv' \
             .
           ls -lh deploy.tar.gz
 

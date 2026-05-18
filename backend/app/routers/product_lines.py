@@ -34,9 +34,21 @@ async def _enrich(db: AsyncSession, pl: ProductLine) -> ProductLineOut:
 
 async def _enrich_tree(db: AsyncSession, pl: ProductLine) -> ProductLineTree:
     """Recursively build a tree node with enriched product_count."""
-    out = ProductLineTree.model_validate(pl)
-    out.product_count = await _product_count(db, pl.id)
-    out.children = [await _enrich_tree(db, child) for child in pl.children if child.is_active]
+    out = ProductLineTree(
+        id=pl.id,
+        parent_id=pl.parent_id,
+        name=pl.name,
+        slug=pl.slug,
+        description=pl.description,
+        cover_image=pl.cover_image,
+        sort_order=pl.sort_order,
+        is_active=pl.is_active,
+        product_count=await _product_count(db, pl.id),
+        created_at=pl.created_at,
+        children=[],
+    )
+    if pl.children:
+        out.children = [await _enrich_tree(db, child) for child in pl.children if child.is_active]
     return out
 
 
@@ -49,7 +61,7 @@ async def get_product_line_tree(db: AsyncSession = Depends(get_db)):
     """Return only top-level lines (parent_id IS NULL) with children nested."""
     result = await db.execute(
         select(ProductLine)
-        .options(selectinload(ProductLine.children))
+        .options(selectinload(ProductLine.children).selectinload(ProductLine.children))
         .where(ProductLine.is_active.is_(True), ProductLine.parent_id.is_(None))
         .order_by(ProductLine.sort_order, ProductLine.name)
     )
@@ -73,7 +85,7 @@ async def list_product_lines(db: AsyncSession = Depends(get_db)):
 async def get_product_line(slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(ProductLine)
-        .options(selectinload(ProductLine.children))
+        .options(selectinload(ProductLine.children).selectinload(ProductLine.children))
         .where(ProductLine.slug == slug, ProductLine.is_active.is_(True))
     )
     pl = result.scalar_one_or_none()

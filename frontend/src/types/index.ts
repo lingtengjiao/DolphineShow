@@ -45,6 +45,7 @@ export interface Product {
 
 export interface ProductDetail extends Product {
   detail_html: string | null
+  video_url: string | null
   images: string[]
   min_order_qty: number
   material: string | null

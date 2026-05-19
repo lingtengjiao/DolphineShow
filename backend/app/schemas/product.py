@@ -11,6 +11,7 @@ class ProductCreate(BaseModel):
     description: str | None = None
     detail_html: str | None = None
     main_image: str | None = None
+    video_url: str | None = None
     images: list[str] = []
     price: Decimal | None = None
     min_order_qty: int = 1
@@ -30,6 +31,7 @@ class ProductUpdate(BaseModel):
     description: str | None = None
     detail_html: str | None = None
     main_image: str | None = None
+    video_url: str | None = None
     images: list[str] | None = None
     price: Decimal | None = None
     min_order_qty: int | None = None
@@ -51,6 +53,7 @@ class ProductOut(BaseModel):
     description: str | None
     detail_html: str | None
     main_image: str | None
+    video_url: str | None = None
     images: list[str]
     price: Decimal | None = None
     min_order_qty: int

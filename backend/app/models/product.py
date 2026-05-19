@@ -18,6 +18,7 @@ class Product(Base):
     description: Mapped[str | None] = mapped_column(Text)
     detail_html: Mapped[str | None] = mapped_column(Text)
     main_image: Mapped[str | None] = mapped_column(String(500))
+    video_url: Mapped[str | None] = mapped_column(String(500))
     images: Mapped[list | None] = mapped_column(JSONB, default=list)
     price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     min_order_qty: Mapped[int] = mapped_column(Integer, default=1)

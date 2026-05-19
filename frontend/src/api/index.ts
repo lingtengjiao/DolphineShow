@@ -77,4 +77,11 @@ export const uploadApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
+  video: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return client.post<{ url: string; filename: string }>('/api/upload/video', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }

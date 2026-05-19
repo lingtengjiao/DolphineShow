@@ -67,6 +67,13 @@ PRODUCTS = [
 async def seed():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Ensure newly added columns also exist on databases that were originally
+        # created with Base.metadata.create_all() (which does not alter existing tables).
+        # All statements are idempotent on PostgreSQL 9.6+.
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS intl_url VARCHAR(500)"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)"))
+        await conn.execute(text("ALTER TABLE product_lines ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES product_lines(id) ON DELETE SET NULL"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_product_lines_parent_id ON product_lines(parent_id)"))
 
     async with async_session() as session:
         existing = await session.execute(text("SELECT COUNT(*) FROM users"))

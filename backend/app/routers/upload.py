@@ -14,6 +14,9 @@ router = APIRouter(prefix="/api/upload", tags=["upload"])
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_SIZE = 10 * 1024 * 1024  # 10MB
 
+ALLOWED_VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
+MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
+
 
 def _tos_client():
     return tos.TosClientV2(
@@ -67,3 +70,26 @@ async def upload_image(file: UploadFile, admin: User = Depends(require_admin)):
         "thumbnail": thumb_url,
         "filename": filename,
     }
+
+
+@router.post("/video")
+async def upload_video(file: UploadFile, admin: User = Depends(require_admin)):
+    if file.content_type not in ALLOWED_VIDEO_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only MP4, WebM, MOV allowed",
+        )
+    content = await file.read()
+    if len(content) > MAX_VIDEO_SIZE:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large (max 50MB)")
+
+    ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "mp4"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+
+    try:
+        client = _tos_client()
+        url = _upload_bytes(client, f"videos/{filename}", content, file.content_type)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"TOS upload failed: {e}")
+
+    return {"url": url, "filename": filename}

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import { FiPlus, FiEdit2, FiTrash2, FiUpload, FiX, FiSearch, FiBox, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiUpload, FiX, FiSearch, FiBox, FiChevronLeft, FiChevronRight, FiVideo } from 'react-icons/fi'
 import { productApi, productLineApi, uploadApi } from '../../api'
 import type { ProductLine, PaginatedProducts } from '../../types'
 import PageHeader from '../../components/admin/PageHeader'
@@ -16,6 +16,7 @@ interface ProductForm {
   description: string
   detail_html: string
   main_image: string
+  video_url: string
   images: string[]
   price: string
   min_order_qty: number
@@ -35,6 +36,7 @@ const emptyForm: ProductForm = {
   description: '',
   detail_html: '',
   main_image: '',
+  video_url: '',
   images: [],
   price: '',
   min_order_qty: 100,
@@ -60,6 +62,7 @@ export default function ProductAdmin() {
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -100,6 +103,7 @@ export default function ProductAdmin() {
         description: product.description || '',
         detail_html: product.detail_html || '',
         main_image: product.main_image || '',
+        video_url: product.video_url || '',
         images: product.images || [],
         price: product.price != null ? String(product.price) : '',
         min_order_qty: product.min_order_qty,
@@ -141,6 +145,22 @@ export default function ProductAdmin() {
     setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }))
   }
 
+  const handleUploadVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingVideo(true)
+    try {
+      const { data: result } = await uploadApi.video(file)
+      setForm((prev) => ({ ...prev, video_url: result.url }))
+      toast.success('视频上传成功')
+    } catch {
+      toast.error('视频上传失败')
+    } finally {
+      setUploadingVideo(false)
+      e.target.value = ''
+    }
+  }
+
   const handleSave = async () => {
     if (!form.name) return toast.error('产品名称不能为空')
     if (!form.sku) return toast.error('SKU不能为空')
@@ -148,7 +168,13 @@ export default function ProductAdmin() {
 
     setSaving(true)
     try {
-      const payload = { ...form, product_line_id: Number(form.product_line_id), price: form.price ? Number(form.price) : null, intl_url: form.intl_url || null }
+      const payload = {
+        ...form,
+        product_line_id: Number(form.product_line_id),
+        price: form.price ? Number(form.price) : null,
+        intl_url: form.intl_url || null,
+        video_url: form.video_url || null,
+      }
       if (editingId) {
         await productApi.update(editingId, payload)
         toast.success('产品更新成功')
@@ -328,6 +354,34 @@ export default function ProductAdmin() {
                   </label>
                 </div>
               </div>
+            </div>
+            <div className="mt-5">
+              <label className="block text-[13px] font-medium text-gray-500 mb-1">产品视频</label>
+              <p className="text-[11px] text-gray-400 mb-2">可选，上传后与主图、图库在同一轮播中展示（默认排在主图后）。MP4 / WebM / MOV，≤ 50 MB</p>
+              {form.video_url ? (
+                <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 group">
+                  <video src={form.video_url} controls className="w-full max-h-48 object-contain bg-black" />
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, video_url: '' })}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <FiX size={16} className="text-white" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-brand/40 hover:bg-brand/5 transition-colors">
+                  <FiVideo size={22} className="text-gray-300 mb-2" />
+                  <span className="text-[12px] text-gray-400">{uploadingVideo ? '上传中...' : '点击上传视频'}</span>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                    className="hidden"
+                    onChange={handleUploadVideo}
+                    disabled={uploadingVideo}
+                  />
+                </label>
+              )}
             </div>
           </div>
 

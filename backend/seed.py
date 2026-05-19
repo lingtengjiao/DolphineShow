@@ -6,8 +6,10 @@ from sqlalchemy import text
 
 from app.database import Base, async_session, engine
 from app.models.banner import Banner
+from app.models.company_image import CompanyImage  # noqa: F401 – registers table with Base
 from app.models.product import Product
 from app.models.product_line import ProductLine
+from app.models.review import CustomerReview  # noqa: F401 – registers table with Base
 from app.models.user import User, UserRole
 from app.utils.auth import hash_password
 
@@ -72,6 +74,8 @@ async def seed():
         # All statements are idempotent on PostgreSQL 9.6+.
         await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS intl_url VARCHAR(500)"))
         await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS price_tiers JSONB DEFAULT '[]'::jsonb"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb"))
         await conn.execute(text("ALTER TABLE product_lines ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES product_lines(id) ON DELETE SET NULL"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_product_lines_parent_id ON product_lines(parent_id)"))
 

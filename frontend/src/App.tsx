@@ -18,6 +18,8 @@ import ProductAdmin from './pages/admin/ProductAdmin'
 import InquiryAdmin from './pages/admin/InquiryAdmin'
 import UserAdmin from './pages/admin/UserAdmin'
 import BannerAdmin from './pages/admin/BannerAdmin'
+import CompanyImageAdmin from './pages/admin/CompanyImageAdmin'
+import ReviewAdmin from './pages/admin/ReviewAdmin'
 
 export default function App() {
   const { loadUser } = useAuthStore()
@@ -50,6 +52,8 @@ export default function App() {
           <Route path="inquiries" element={<InquiryAdmin />} />
           <Route path="users" element={<UserAdmin />} />
           <Route path="banners" element={<BannerAdmin />} />
+          <Route path="company-images" element={<CompanyImageAdmin />} />
+          <Route path="reviews" element={<ReviewAdmin />} />
         </Route>
       </Routes>
     </BrowserRouter>

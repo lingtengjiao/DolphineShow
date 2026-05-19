@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { FiPlus, FiEdit2, FiTrash2, FiUpload, FiX, FiSearch, FiBox, FiChevronLeft, FiChevronRight, FiVideo } from 'react-icons/fi'
 import { productApi, productLineApi, uploadApi } from '../../api'
-import type { ProductLine, PaginatedProducts } from '../../types'
+import type { ProductLine, PaginatedProducts, PriceTier } from '../../types'
 import PageHeader from '../../components/admin/PageHeader'
 import Modal from '../../components/admin/Modal'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import EmptyState from '../../components/admin/EmptyState'
 import TableSkeleton from '../../components/admin/TableSkeleton'
+
+const CERT_OPTIONS = ['CE', 'EN71', 'REACH', 'CPC', 'ASTM F963', 'CPSIA', 'ISO 8124', 'BSCI', 'SEDEX', 'Oeko-Tex']
 
 interface ProductForm {
   product_line_id: number | ''
@@ -19,10 +21,12 @@ interface ProductForm {
   video_url: string
   images: string[]
   price: string
+  price_tiers: PriceTier[]
   min_order_qty: number
   material: string
   size: string
   weight: string
+  certifications: string[]
   intl_url: string
   is_featured: boolean
   is_new: boolean
@@ -39,10 +43,12 @@ const emptyForm: ProductForm = {
   video_url: '',
   images: [],
   price: '',
+  price_tiers: [],
   min_order_qty: 100,
   material: '',
   size: '',
   weight: '',
+  certifications: [],
   intl_url: '',
   is_featured: false,
   is_new: false,
@@ -106,10 +112,12 @@ export default function ProductAdmin() {
         video_url: product.video_url || '',
         images: product.images || [],
         price: product.price != null ? String(product.price) : '',
+        price_tiers: product.price_tiers || [],
         min_order_qty: product.min_order_qty,
         material: product.material || '',
         size: product.size || '',
         weight: product.weight || '',
+        certifications: product.certifications || [],
         intl_url: product.intl_url || '',
         is_featured: product.is_featured,
         is_new: product.is_new,
@@ -119,6 +127,36 @@ export default function ProductAdmin() {
     } catch {
       toast.error('获取产品详情失败')
     }
+  }
+
+  const addPriceTier = () => {
+    setForm((prev) => ({
+      ...prev,
+      price_tiers: [...prev.price_tiers, { min_qty: 1, max_qty: null, price: 0 }],
+    }))
+  }
+
+  const updatePriceTier = (index: number, field: keyof PriceTier, value: string) => {
+    setForm((prev) => {
+      const tiers = [...prev.price_tiers]
+      if (field === 'min_qty') tiers[index] = { ...tiers[index], min_qty: Number(value) }
+      else if (field === 'max_qty') tiers[index] = { ...tiers[index], max_qty: value === '' ? null : Number(value) }
+      else if (field === 'price') tiers[index] = { ...tiers[index], price: Number(value) }
+      return { ...prev, price_tiers: tiers }
+    })
+  }
+
+  const removePriceTier = (index: number) => {
+    setForm((prev) => ({ ...prev, price_tiers: prev.price_tiers.filter((_, i) => i !== index) }))
+  }
+
+  const toggleCertification = (cert: string) => {
+    setForm((prev) => ({
+      ...prev,
+      certifications: prev.certifications.includes(cert)
+        ? prev.certifications.filter((c) => c !== cert)
+        : [...prev.certifications, cert],
+    }))
   }
 
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>, field: 'main_image' | 'images') => {
@@ -174,6 +212,7 @@ export default function ProductAdmin() {
         price: form.price ? Number(form.price) : null,
         intl_url: form.intl_url || null,
         video_url: form.video_url || null,
+        detail_html: form.detail_html || null,
       }
       if (editingId) {
         await productApi.update(editingId, payload)
@@ -293,8 +332,105 @@ export default function ProductAdmin() {
 
           {/* Description */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-500 mb-1.5">产品描述</label>
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={`${inputCls} resize-none`} rows={3} placeholder="输入产品描述" />
+            <label className="block text-[13px] font-medium text-gray-500 mb-1.5">产品简介</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={`${inputCls} resize-none`} rows={3} placeholder="简短产品描述，展示在详情页顶部" />
+          </div>
+
+          {/* Detail HTML */}
+          <div>
+            <label className="block text-[13px] font-medium text-gray-500 mb-1.5">
+              详细描述
+              <span className="ml-2 text-[11px] font-normal text-gray-400">（支持 HTML，展示在详情页底部；留空则不展示）</span>
+            </label>
+            <textarea
+              value={form.detail_html}
+              onChange={(e) => setForm({ ...form, detail_html: e.target.value })}
+              className={`${inputCls} resize-y font-mono text-[12px]`}
+              rows={5}
+              placeholder="<p>输入 HTML 内容，或留空</p>"
+            />
+          </div>
+
+          {/* Price Tiers */}
+          <div>
+            <h4 className="text-[13px] font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <div className="w-1 h-4 bg-purple-400 rounded-full" /> 批发价格阶梯
+              <span className="text-[11px] font-normal text-gray-400">（按订货量设置不同单价）</span>
+            </h4>
+            <div className="space-y-2">
+              {form.price_tiers.map((tier, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <input
+                      type="number"
+                      value={tier.min_qty}
+                      onChange={(e) => updatePriceTier(i, 'min_qty', e.target.value)}
+                      className={`${inputCls} w-24`}
+                      placeholder="最小量"
+                      min={1}
+                    />
+                    <span className="text-gray-400 text-[12px] shrink-0">—</span>
+                    <input
+                      type="number"
+                      value={tier.max_qty ?? ''}
+                      onChange={(e) => updatePriceTier(i, 'max_qty', e.target.value)}
+                      className={`${inputCls} w-24`}
+                      placeholder="最大量（空=无上限）"
+                      min={1}
+                    />
+                    <span className="text-gray-400 text-[12px] shrink-0">pcs，单价</span>
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px]">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={tier.price}
+                        onChange={(e) => updatePriceTier(i, 'price', e.target.value)}
+                        className={`${inputCls} pl-6`}
+                        placeholder="0.00"
+                        min={0}
+                      />
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => removePriceTier(i)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0">
+                    <FiX size={15} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPriceTier}
+                className="flex items-center gap-1.5 text-[12px] text-brand hover:text-brand-dark transition-colors mt-1"
+              >
+                <FiPlus size={14} /> 添加价格阶梯
+              </button>
+            </div>
+          </div>
+
+          {/* Certifications */}
+          <div>
+            <h4 className="text-[13px] font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <div className="w-1 h-4 bg-emerald-400 rounded-full" /> 产品认证
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {CERT_OPTIONS.map((cert) => {
+                const checked = form.certifications.includes(cert)
+                return (
+                  <button
+                    key={cert}
+                    type="button"
+                    onClick={() => toggleCertification(cert)}
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all ${
+                      checked
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                        : 'bg-white border-gray-200 text-gray-500 hover:border-brand/50'
+                    }`}
+                  >
+                    {checked && <span className="mr-1">✓</span>}{cert}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* International site link */}

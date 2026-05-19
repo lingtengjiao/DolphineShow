@@ -5,13 +5,21 @@ import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
-import { productApi } from '../api'
+import { productApi, companyImageApi, reviewApi } from '../api'
 import { useAuthStore } from '../store/auth'
 import ProductCard from '../components/product/ProductCard'
 import ProductImageZoom from '../components/product/ProductImageZoom'
-import type { ProductDetail as ProductDetailType, Product } from '../types'
+import type { ProductDetail as ProductDetailType, Product, CompanyImage, CustomerReview } from '../types'
 
 const PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="600"%3E%3Crect width="600" height="600" fill="%23f3ece4"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23c4a882" font-size="80"%3E🧸%3C/text%3E%3C/svg%3E'
+
+const CATEGORY_LABELS: Record<string, string> = {
+  factory: '工厂实力',
+  team: '团队风采',
+  brand: '品牌故事',
+  certificate: '资质认证',
+  other: '更多详情',
+}
 
 type GalleryItem =
   | { type: 'image'; src: string }
@@ -46,12 +54,26 @@ function PlayIcon({ className }: { className?: string }) {
   )
 }
 
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <svg key={star} className={`w-4 h-4 ${star <= rating ? 'text-amber-400' : 'text-gray-200'}`} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ))}
+    </div>
+  )
+}
+
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [product, setProduct] = useState<ProductDetailType | null>(null)
   const [related, setRelated] = useState<Product[]>([])
+  const [companyImages, setCompanyImages] = useState<CompanyImage[]>([])
+  const [reviews, setReviews] = useState<CustomerReview[]>([])
   const [selectedMedia, setSelectedMedia] = useState(0)
   const [loading, setLoading] = useState(true)
   const [shareOpen, setShareOpen] = useState(false)
@@ -137,6 +159,8 @@ export default function ProductDetail() {
       setSelectedMedia(0)
     }).catch(() => navigate('/products')).finally(() => setLoading(false))
     productApi.related(Number(id), 6).then((r) => setRelated(r.data)).catch(() => {})
+    companyImageApi.list().then((r) => setCompanyImages(r.data)).catch(() => {})
+    reviewApi.list(12).then((r) => setReviews(r.data)).catch(() => {})
   }, [id, navigate])
 
   useEffect(() => {
@@ -181,6 +205,17 @@ export default function ProductDetail() {
     )
   }
 
+  const hasDetails = !!(product.description || product.detail_html)
+  const priceTiers = product.price_tiers || []
+  const certifications = product.certifications || []
+
+  // Group company images by category
+  const imageGroups = companyImages.reduce<Record<string, CompanyImage[]>>((acc, img) => {
+    if (!acc[img.category]) acc[img.category] = []
+    acc[img.category].push(img)
+    return acc
+  }, {})
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
       {/* Breadcrumb */}
@@ -194,11 +229,12 @@ export default function ProductDetail() {
 
       {/* Product main section */}
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 mb-10 lg:mb-16">
-        {/* Media gallery — Amazon-style shared carousel */}
+        {/* Media gallery */}
         <div className="lg:w-1/2 overflow-visible">
           <div className="flex flex-col lg:flex-row gap-3 overflow-visible">
+            {/* Vertical thumbnail strip — no scrollbar */}
             {galleryItems.length > 1 && (
-              <div className="hidden lg:flex flex-col gap-2 w-[72px] shrink-0 max-h-[min(520px,70vh)] overflow-y-auto">
+              <div className="hidden lg:flex flex-col gap-2 w-[72px] shrink-0">
                 {galleryItems.map((item, i) => renderThumbnail(item, i, 'lg'))}
               </div>
             )}
@@ -225,6 +261,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* Mobile horizontal thumbnails */}
           {galleryItems.length > 1 && (
             <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 mt-3">
               {galleryItems.map((item, i) => renderThumbnail(item, i, 'sm'))}
@@ -237,6 +274,7 @@ export default function ProductDetail() {
           <h1 className="text-xl md:text-3xl font-extrabold font-bold text-gray-800 mb-2">{product.name}</h1>
           <p className="text-sm text-gray-400 mb-6">SKU: #{product.sku}</p>
 
+          {/* Price card */}
           <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-500">B2B Price</span>
@@ -246,7 +284,35 @@ export default function ProductDetail() {
                 <Link to="/login" className="text-sm text-accent hover:underline">Sign in to view price →</Link>
               )}
             </div>
-            <div className="text-sm text-gray-500">
+
+            {/* Price tiers */}
+            {user && priceTiers.length > 0 && (
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wider">批量优惠价格</p>
+                <div className="overflow-hidden rounded-lg border border-gray-100">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="text-left px-3 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">订货量</th>
+                        <th className="text-right px-3 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">单价 (USD)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {priceTiers.map((tier, i) => (
+                        <tr key={i} className="hover:bg-gray-50/50">
+                          <td className="px-3 py-2 text-gray-600">
+                            {tier.min_qty}{tier.max_qty ? ` – ${tier.max_qty}` : '+'} pcs
+                          </td>
+                          <td className="px-3 py-2 text-right font-semibold text-brand">${Number(tier.price).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="text-sm text-gray-500 mt-4">
               MOQ: <span className="font-medium text-gray-700">{product.min_order_qty} pcs</span>
             </div>
           </div>
@@ -267,6 +333,20 @@ export default function ProductDetail() {
               <dt className="text-gray-400">Product Line</dt>
               <dd className="text-gray-700">{product.product_line_name}</dd>
             </dl>
+
+            {/* Certifications */}
+            {certifications.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wider">认证 / Certifications</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {certifications.map((cert) => (
+                    <span key={cert} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold">
+                      {cert}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* International site link */}
@@ -307,6 +387,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* Share modal */}
       {shareOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
@@ -353,14 +434,77 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* Description */}
-      {product.description && (
+      {/* Product Details */}
+      {hasDetails && (
         <div className="bg-white rounded-2xl p-8 shadow-sm mb-10">
-          <h2 className="text-xl font-extrabold font-bold text-gray-800 mb-4">Product Details</h2>
-          <p className="text-gray-600 leading-relaxed whitespace-pre-line">{product.description}</p>
-          {product.detail_html && (
-            <div className="mt-6 prose max-w-none" dangerouslySetInnerHTML={{ __html: product.detail_html }} />
+          <h2 className="text-xl font-extrabold text-gray-800 mb-4">Product Details</h2>
+          {product.description && (
+            <p className="text-gray-600 leading-relaxed whitespace-pre-line">{product.description}</p>
           )}
+          {product.detail_html && (
+            <div className={`prose max-w-none ${product.description ? 'mt-6' : ''}`} dangerouslySetInnerHTML={{ __html: product.detail_html }} />
+          )}
+        </div>
+      )}
+
+      {/* Company Images */}
+      {companyImages.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-extrabold text-gray-800 mb-6">About Us</h2>
+          {Object.entries(imageGroups).map(([category, imgs]) => (
+            <div key={category} className="mb-8">
+              <h3 className="text-base font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                <span className="w-4 h-0.5 bg-brand rounded-full inline-block" />
+                {CATEGORY_LABELS[category] || category}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {imgs.map((img) => (
+                  <div key={img.id} className="rounded-xl overflow-hidden bg-gray-50 aspect-video">
+                    <img
+                      src={img.url}
+                      alt={img.caption || ''}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    {img.caption && (
+                      <p className="text-xs text-gray-500 text-center py-1.5 px-2 truncate">{img.caption}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Customer Reviews */}
+      {reviews.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-extrabold text-gray-800 mb-6">Customer Reviews</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reviews.map((review) => (
+              <div key={review.id} className="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
+                <StarRating rating={review.rating} />
+                <p className="text-gray-600 text-sm leading-relaxed flex-1">"{review.content}"</p>
+                <div className="flex items-center gap-3 pt-2 border-t border-gray-50">
+                  {review.avatar_url ? (
+                    <img src={review.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand/20 to-brand/40 flex items-center justify-center text-brand font-bold text-sm flex-shrink-0">
+                      {review.reviewer_name[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-700 truncate">{review.reviewer_name}</p>
+                    {(review.reviewer_company || review.reviewer_country) && (
+                      <p className="text-[11px] text-gray-400 truncate">
+                        {[review.reviewer_company, review.reviewer_country].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

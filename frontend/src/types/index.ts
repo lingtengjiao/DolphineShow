@@ -43,16 +43,47 @@ export interface Product {
   created_at: string
 }
 
+export interface PriceTier {
+  min_qty: number
+  max_qty: number | null
+  price: number
+}
+
 export interface ProductDetail extends Product {
   detail_html: string | null
   video_url: string | null
   images: string[]
+  price_tiers: PriceTier[]
   min_order_qty: number
   material: string | null
   size: string | null
   weight: string | null
+  certifications: string[]
   intl_url: string | null
   is_active: boolean
+}
+
+export interface CompanyImage {
+  id: number
+  url: string
+  category: string
+  caption: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
+export interface CustomerReview {
+  id: number
+  reviewer_name: string
+  reviewer_company: string | null
+  reviewer_country: string | null
+  content: string
+  rating: number
+  avatar_url: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
 }
 
 export interface PaginatedProducts {

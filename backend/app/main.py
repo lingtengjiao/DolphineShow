@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import admin, auth, banners, inquiries, product_lines, products, upload
+from app.routers import admin, auth, banners, company_images, inquiries, product_lines, products, reviews, upload
 
 app = FastAPI(title="Plush Toy B2B API", version="1.0.0")
 
@@ -20,6 +20,8 @@ app.include_router(product_lines.router)
 app.include_router(products.router)
 app.include_router(inquiries.router)
 app.include_router(banners.router)
+app.include_router(company_images.router)
+app.include_router(reviews.router)
 app.include_router(upload.router)
 app.include_router(admin.router)
 

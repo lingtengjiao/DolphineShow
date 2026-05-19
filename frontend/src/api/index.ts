@@ -1,6 +1,8 @@
 import client from './client'
 import type {
   Banner,
+  CompanyImage,
+  CustomerReview,
   DashboardStats,
   Inquiry,
   InquiryCreate,
@@ -67,6 +69,22 @@ export const bannerApi = {
   create: (data: Partial<Banner>) => client.post<Banner>('/api/banners/admin', data),
   update: (id: number, data: Partial<Banner>) => client.put<Banner>(`/api/banners/admin/${id}`, data),
   delete: (id: number) => client.delete(`/api/banners/admin/${id}`),
+}
+
+export const companyImageApi = {
+  list: () => client.get<CompanyImage[]>('/api/company-images'),
+  adminList: () => client.get<CompanyImage[]>('/api/company-images/admin/all'),
+  create: (data: Partial<CompanyImage>) => client.post<CompanyImage>('/api/company-images/admin', data),
+  update: (id: number, data: Partial<CompanyImage>) => client.put<CompanyImage>(`/api/company-images/admin/${id}`, data),
+  delete: (id: number) => client.delete(`/api/company-images/admin/${id}`),
+}
+
+export const reviewApi = {
+  list: (limit = 20) => client.get<CustomerReview[]>('/api/reviews', { params: { limit } }),
+  adminList: () => client.get<CustomerReview[]>('/api/reviews/admin/all'),
+  create: (data: Partial<CustomerReview>) => client.post<CustomerReview>('/api/reviews/admin', data),
+  update: (id: number, data: Partial<CustomerReview>) => client.put<CustomerReview>(`/api/reviews/admin/${id}`, data),
+  delete: (id: number) => client.delete(`/api/reviews/admin/${id}`),
 }
 
 export const uploadApi = {

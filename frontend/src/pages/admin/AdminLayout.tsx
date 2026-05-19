@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom'
-import { FiGrid, FiLayers, FiBox, FiMail, FiUsers, FiArrowLeft, FiLogOut, FiMenu, FiX, FiChevronRight, FiImage } from 'react-icons/fi'
+import { FiGrid, FiLayers, FiBox, FiMail, FiUsers, FiArrowLeft, FiLogOut, FiMenu, FiX, FiChevronRight, FiImage, FiCamera, FiMessageSquare } from 'react-icons/fi'
 import { useAuthStore } from '../../store/auth'
 
 const navItems = [
@@ -10,6 +10,8 @@ const navItems = [
   { to: '/admin/inquiries', icon: FiMail, label: '询盘管理' },
   { to: '/admin/users', icon: FiUsers, label: '客户管理' },
   { to: '/admin/banners', icon: FiImage, label: 'Banner 管理' },
+  { to: '/admin/company-images', icon: FiCamera, label: '公司图片' },
+  { to: '/admin/reviews', icon: FiMessageSquare, label: '客户评价' },
 ]
 
 const breadcrumbMap: Record<string, string> = {
@@ -19,6 +21,8 @@ const breadcrumbMap: Record<string, string> = {
   '/admin/inquiries': '询盘管理',
   '/admin/users': '客户管理',
   '/admin/banners': 'Banner 管理',
+  '/admin/company-images': '公司图片',
+  '/admin/reviews': '客户评价',
 }
 
 export default function AdminLayout() {

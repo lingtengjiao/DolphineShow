@@ -76,6 +76,11 @@ async def seed():
         await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)"))
         await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS price_tiers JSONB DEFAULT '[]'::jsonb"))
         await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS sample_price NUMERIC(10,2)"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS filling VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS age_range VARCHAR(100)"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS support_customization BOOLEAN NOT NULL DEFAULT TRUE"))
+        await conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS support_logo BOOLEAN NOT NULL DEFAULT TRUE"))
         await conn.execute(text("ALTER TABLE product_lines ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES product_lines(id) ON DELETE SET NULL"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_product_lines_parent_id ON product_lines(parent_id)"))
 

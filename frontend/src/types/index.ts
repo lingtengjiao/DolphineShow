@@ -53,12 +53,17 @@ export interface ProductDetail extends Product {
   detail_html: string | null
   video_url: string | null
   images: string[]
+  sample_price: number | null
   price_tiers: PriceTier[]
   min_order_qty: number
   material: string | null
+  filling: string | null
   size: string | null
   weight: string | null
+  age_range: string | null
   certifications: string[]
+  support_customization: boolean
+  support_logo: boolean
   intl_url: string | null
   is_active: boolean
 }

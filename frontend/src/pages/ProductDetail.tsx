@@ -276,23 +276,28 @@ export default function ProductDetail() {
 
           {/* Price card */}
           <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-500">B2B Price</span>
+            {/* B2B unit price */}
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-gray-500">B2B Unit Price</span>
               {user && product.price ? (
-                <span className="text-3xl font-bold text-brand">${product.price}</span>
+                <span className="text-3xl font-bold text-brand">${Number(product.price).toFixed(2)}</span>
               ) : (
                 <Link to="/login" className="text-sm text-accent hover:underline">Sign in to view price →</Link>
               )}
             </div>
 
+            <div className="text-sm text-gray-500 mb-4">
+              MOQ: <span className="font-medium text-gray-700">{product.min_order_qty} pcs</span>
+            </div>
+
             {/* Price tiers */}
             {user && priceTiers.length > 0 && (
-              <div className="mt-4 border-t border-gray-100 pt-4">
-                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wider">批量优惠价格</p>
+              <div className="border-t border-gray-100 pt-4 mb-4">
+                <p className="text-[11px] text-gray-400 mb-2 font-semibold uppercase tracking-wider">批量优惠价格</p>
                 <div className="overflow-hidden rounded-lg border border-gray-100">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50">
+                      <tr className="bg-gray-50/80">
                         <th className="text-left px-3 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">订货量</th>
                         <th className="text-right px-3 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">单价 (USD)</th>
                       </tr>
@@ -303,7 +308,7 @@ export default function ProductDetail() {
                           <td className="px-3 py-2 text-gray-600">
                             {tier.min_qty}{tier.max_qty ? ` – ${tier.max_qty}` : '+'} pcs
                           </td>
-                          <td className="px-3 py-2 text-right font-semibold text-brand">${Number(tier.price).toFixed(2)}</td>
+                          <td className="px-3 py-2 text-right font-bold text-brand">${Number(tier.price).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -312,9 +317,25 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="text-sm text-gray-500 mt-4">
-              MOQ: <span className="font-medium text-gray-700">{product.min_order_qty} pcs</span>
-            </div>
+            {/* Sample price + get sample */}
+            {product.sample_price != null && (
+              <div className="border-t border-gray-100 pt-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Sample Price</p>
+                  {user ? (
+                    <p className="text-lg font-bold text-gray-700">${Number(product.sample_price).toFixed(2)} <span className="text-[12px] font-normal text-gray-400">/ pc</span></p>
+                  ) : (
+                    <Link to="/login" className="text-sm text-accent hover:underline">Sign in to view →</Link>
+                  )}
+                </div>
+                <Link
+                  to={`/inquiry?product_id=${product.id}&product_name=${encodeURIComponent(product.name)}&type=sample`}
+                  className="shrink-0 px-4 py-2 border-2 border-brand text-brand text-sm font-semibold rounded-full hover:bg-brand hover:text-white transition-all"
+                >
+                  Get Sample
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Specs */}
@@ -324,27 +345,46 @@ export default function ProductDetail() {
               {product.material && (
                 <><dt className="text-gray-400">Material</dt><dd className="text-gray-700">{product.material}</dd></>
               )}
+              {product.filling && (
+                <><dt className="text-gray-400">Filling</dt><dd className="text-gray-700">{product.filling}</dd></>
+              )}
               {product.size && (
                 <><dt className="text-gray-400">Size</dt><dd className="text-gray-700">{product.size}</dd></>
               )}
               {product.weight && (
                 <><dt className="text-gray-400">Weight</dt><dd className="text-gray-700">{product.weight}</dd></>
               )}
+              {product.age_range && (
+                <><dt className="text-gray-400">Age Range</dt><dd className="text-gray-700">{product.age_range}</dd></>
+              )}
               <dt className="text-gray-400">Product Line</dt>
               <dd className="text-gray-700">{product.product_line_name}</dd>
             </dl>
 
+            {/* Customization badges */}
+            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-2">
+              {product.support_customization && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-[11px] font-semibold">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  OEM / Custom
+                </span>
+              )}
+              {product.support_logo && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-[11px] font-semibold">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Logo Printing
+                </span>
+              )}
+            </div>
+
             {/* Certifications */}
             {certifications.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wider">认证 / Certifications</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {certifications.map((cert) => (
-                    <span key={cert} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold">
-                      {cert}
-                    </span>
-                  ))}
-                </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {certifications.map((cert) => (
+                  <span key={cert} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold">
+                    {cert}
+                  </span>
+                ))}
               </div>
             )}
           </div>

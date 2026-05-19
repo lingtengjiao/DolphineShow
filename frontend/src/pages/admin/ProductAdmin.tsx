@@ -11,6 +11,14 @@ import TableSkeleton from '../../components/admin/TableSkeleton'
 
 const CERT_OPTIONS = ['CE', 'EN71', 'REACH', 'CPC', 'ASTM F963', 'CPSIA', 'ISO 8124', 'BSCI', 'SEDEX', 'Oeko-Tex']
 
+// Price tier uses string for `price` so users can freely type decimals;
+// converted to number only on save.
+interface PriceTierForm {
+  min_qty: number
+  max_qty: number | null
+  price: string
+}
+
 interface ProductForm {
   product_line_id: number | ''
   name: string
@@ -21,12 +29,17 @@ interface ProductForm {
   video_url: string
   images: string[]
   price: string
-  price_tiers: PriceTier[]
+  sample_price: string
+  price_tiers: PriceTierForm[]
   min_order_qty: number
   material: string
+  filling: string
   size: string
   weight: string
+  age_range: string
   certifications: string[]
+  support_customization: boolean
+  support_logo: boolean
   intl_url: string
   is_featured: boolean
   is_new: boolean
@@ -43,12 +56,17 @@ const emptyForm: ProductForm = {
   video_url: '',
   images: [],
   price: '',
+  sample_price: '',
   price_tiers: [],
   min_order_qty: 100,
   material: '',
+  filling: '',
   size: '',
   weight: '',
+  age_range: '',
   certifications: [],
+  support_customization: true,
+  support_logo: true,
   intl_url: '',
   is_featured: false,
   is_new: false,
@@ -112,12 +130,21 @@ export default function ProductAdmin() {
         video_url: product.video_url || '',
         images: product.images || [],
         price: product.price != null ? String(product.price) : '',
-        price_tiers: product.price_tiers || [],
+        sample_price: product.sample_price != null ? String(product.sample_price) : '',
+        price_tiers: (product.price_tiers || []).map((t: PriceTier) => ({
+          min_qty: t.min_qty,
+          max_qty: t.max_qty,
+          price: String(t.price),
+        })),
         min_order_qty: product.min_order_qty,
         material: product.material || '',
+        filling: product.filling || '',
         size: product.size || '',
         weight: product.weight || '',
+        age_range: product.age_range || '',
         certifications: product.certifications || [],
+        support_customization: product.support_customization ?? true,
+        support_logo: product.support_logo ?? true,
         intl_url: product.intl_url || '',
         is_featured: product.is_featured,
         is_new: product.is_new,
@@ -132,16 +159,16 @@ export default function ProductAdmin() {
   const addPriceTier = () => {
     setForm((prev) => ({
       ...prev,
-      price_tiers: [...prev.price_tiers, { min_qty: 1, max_qty: null, price: 0 }],
+      price_tiers: [...prev.price_tiers, { min_qty: 1, max_qty: null, price: '' }],
     }))
   }
 
-  const updatePriceTier = (index: number, field: keyof PriceTier, value: string) => {
+  const updatePriceTier = (index: number, field: 'min_qty' | 'max_qty' | 'price', value: string) => {
     setForm((prev) => {
       const tiers = [...prev.price_tiers]
-      if (field === 'min_qty') tiers[index] = { ...tiers[index], min_qty: Number(value) }
+      if (field === 'min_qty') tiers[index] = { ...tiers[index], min_qty: Number(value) || 1 }
       else if (field === 'max_qty') tiers[index] = { ...tiers[index], max_qty: value === '' ? null : Number(value) }
-      else if (field === 'price') tiers[index] = { ...tiers[index], price: Number(value) }
+      else if (field === 'price') tiers[index] = { ...tiers[index], price: value }
       return { ...prev, price_tiers: tiers }
     })
   }
@@ -210,6 +237,12 @@ export default function ProductAdmin() {
         ...form,
         product_line_id: Number(form.product_line_id),
         price: form.price ? Number(form.price) : null,
+        sample_price: form.sample_price ? Number(form.sample_price) : null,
+        price_tiers: form.price_tiers
+          .filter((t) => t.price !== '')
+          .map((t) => ({ min_qty: t.min_qty, max_qty: t.max_qty, price: Number(t.price) })),
+        filling: form.filling || null,
+        age_range: form.age_range || null,
         intl_url: form.intl_url || null,
         video_url: form.video_url || null,
         detail_html: form.detail_html || null,
@@ -299,8 +332,21 @@ export default function ProductAdmin() {
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">价格 (USD)</label>
-                <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={inputCls} placeholder="0.00" />
+                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">批发单价 (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">$</span>
+                  <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={`${inputCls} pl-7`} placeholder="0.00" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">
+                  样品价格 (USD)
+                  <span className="ml-2 text-[11px] font-normal text-gray-400">（选填）</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">$</span>
+                  <input type="number" step="0.01" value={form.sample_price} onChange={(e) => setForm({ ...form, sample_price: e.target.value })} className={`${inputCls} pl-7`} placeholder="0.00" />
+                </div>
               </div>
             </div>
           </div>
@@ -310,14 +356,10 @@ export default function ProductAdmin() {
             <h4 className="text-[13px] font-semibold text-gray-800 mb-3 flex items-center gap-2">
               <div className="w-1 h-4 bg-accent rounded-full" /> 产品规格
             </h4>
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">起订量</label>
+                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">起订量 (MOQ)</label>
                 <input type="number" value={form.min_order_qty} onChange={(e) => setForm({ ...form, min_order_qty: Number(e.target.value) })} className={inputCls} />
-              </div>
-              <div>
-                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">材质</label>
-                <input value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} className={inputCls} placeholder="短毛绒+PP棉" />
               </div>
               <div>
                 <label className="block text-[13px] font-medium text-gray-500 mb-1.5">尺寸</label>
@@ -327,6 +369,35 @@ export default function ProductAdmin() {
                 <label className="block text-[13px] font-medium text-gray-500 mb-1.5">重量</label>
                 <input value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className={inputCls} placeholder="200g" />
               </div>
+              <div>
+                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">外壳材质</label>
+                <input value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} className={inputCls} placeholder="短毛绒" />
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">填充料</label>
+                <input value={form.filling} onChange={(e) => setForm({ ...form, filling: e.target.value })} className={inputCls} placeholder="PP棉" />
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-gray-500 mb-1.5">适龄范围</label>
+                <input value={form.age_range} onChange={(e) => setForm({ ...form, age_range: e.target.value })} className={inputCls} placeholder="3岁以上 / 0+" />
+              </div>
+            </div>
+
+            {/* Customization toggles */}
+            <div className="flex flex-wrap gap-6 mt-4">
+              {[
+                { key: 'support_customization' as const, label: '支持 OEM 定制', color: 'peer-checked:bg-brand' },
+                { key: 'support_logo' as const, label: '支持印制 Logo', color: 'peer-checked:bg-brand' },
+              ].map((flag) => (
+                <label key={flag.key} className="flex items-center gap-2.5 cursor-pointer">
+                  <div className="relative">
+                    <input type="checkbox" checked={form[flag.key]} onChange={(e) => setForm({ ...form, [flag.key]: e.target.checked })} className="peer sr-only" />
+                    <div className={`w-9 h-5 rounded-full bg-gray-200 transition-colors ${flag.color}`} />
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${form[flag.key] ? 'left-[18px]' : 'left-0.5'}`} />
+                  </div>
+                  <span className="text-[13px] font-medium text-gray-600">{flag.label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -357,42 +428,47 @@ export default function ProductAdmin() {
               <div className="w-1 h-4 bg-purple-400 rounded-full" /> 批发价格阶梯
               <span className="text-[11px] font-normal text-gray-400">（按订货量设置不同单价）</span>
             </h4>
+            {form.price_tiers.length > 0 && (
+              <div className="mb-2 grid grid-cols-[1fr_12px_1fr_auto_auto] gap-x-2 gap-y-1 items-center text-[11px] text-gray-400 font-medium uppercase tracking-wider px-0.5">
+                <span>最小量 (pcs)</span>
+                <span />
+                <span>最大量 (pcs，空=不限)</span>
+                <span className="text-center">单价 (USD)</span>
+                <span />
+              </div>
+            )}
             <div className="space-y-2">
               {form.price_tiers.map((tier, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 flex-1">
+                <div key={i} className="grid grid-cols-[1fr_12px_1fr_auto_auto] gap-x-2 items-center">
+                  <input
+                    type="number"
+                    value={tier.min_qty}
+                    onChange={(e) => updatePriceTier(i, 'min_qty', e.target.value)}
+                    className={inputCls}
+                    placeholder="例：100"
+                    min={1}
+                  />
+                  <span className="text-gray-300 text-center">—</span>
+                  <input
+                    type="number"
+                    value={tier.max_qty ?? ''}
+                    onChange={(e) => updatePriceTier(i, 'max_qty', e.target.value)}
+                    className={inputCls}
+                    placeholder="留空 = 无上限"
+                    min={1}
+                  />
+                  <div className="relative w-28">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none select-none">$</span>
                     <input
-                      type="number"
-                      value={tier.min_qty}
-                      onChange={(e) => updatePriceTier(i, 'min_qty', e.target.value)}
-                      className={`${inputCls} w-24`}
-                      placeholder="最小量"
-                      min={1}
+                      type="text"
+                      inputMode="decimal"
+                      value={tier.price}
+                      onChange={(e) => updatePriceTier(i, 'price', e.target.value)}
+                      className={`${inputCls} pl-7`}
+                      placeholder="0.00"
                     />
-                    <span className="text-gray-400 text-[12px] shrink-0">—</span>
-                    <input
-                      type="number"
-                      value={tier.max_qty ?? ''}
-                      onChange={(e) => updatePriceTier(i, 'max_qty', e.target.value)}
-                      className={`${inputCls} w-24`}
-                      placeholder="最大量（空=无上限）"
-                      min={1}
-                    />
-                    <span className="text-gray-400 text-[12px] shrink-0">pcs，单价</span>
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px]">$</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={tier.price}
-                        onChange={(e) => updatePriceTier(i, 'price', e.target.value)}
-                        className={`${inputCls} pl-6`}
-                        placeholder="0.00"
-                        min={0}
-                      />
-                    </div>
                   </div>
-                  <button type="button" onClick={() => removePriceTier(i)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0">
+                  <button type="button" onClick={() => removePriceTier(i)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
                     <FiX size={15} />
                   </button>
                 </div>

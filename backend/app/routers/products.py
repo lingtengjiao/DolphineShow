@@ -21,6 +21,26 @@ from app.utils.auth import get_current_user, require_admin
 router = APIRouter(prefix="/api/products", tags=["products"])
 
 
+def _serialize_price_tiers(tiers: list | None) -> list:
+    """Convert price tiers to JSON-serializable dicts for JSONB storage."""
+    if not tiers:
+        return []
+    out = []
+    for tier in tiers:
+        if hasattr(tier, "model_dump"):
+            d = tier.model_dump()
+        else:
+            d = tier
+        out.append(
+            {
+                "min_qty": int(d["min_qty"]),
+                "max_qty": int(d["max_qty"]) if d.get("max_qty") is not None else None,
+                "price": float(d["price"]),
+            }
+        )
+    return out
+
+
 def _product_to_list_out(p: Product, hide_price: bool = False) -> ProductListOut:
     out = ProductListOut.model_validate(p)
     out.product_line_name = p.product_line.name if p.product_line else ""
@@ -235,7 +255,9 @@ async def create_product(
     existing = await db.execute(select(Product).where(Product.sku == data.sku))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="SKU already exists")
-    product = Product(**data.model_dump())
+    dump = data.model_dump()
+    dump["price_tiers"] = _serialize_price_tiers(dump.get("price_tiers"))
+    product = Product(**dump)
     db.add(product)
     await db.flush()
     result = await db.execute(
@@ -255,7 +277,10 @@ async def update_product(
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    for key, value in data.model_dump(exclude_unset=True).items():
+    dump = data.model_dump(exclude_unset=True)
+    if "price_tiers" in dump:
+        dump["price_tiers"] = _serialize_price_tiers(dump["price_tiers"])
+    for key, value in dump.items():
         setattr(product, key, value)
     await db.flush()
     await db.refresh(product)

@@ -231,6 +231,17 @@ export default function ProductAdmin() {
     if (!form.sku) return toast.error('SKU不能为空')
     if (!form.product_line_id) return toast.error('请选择产品线')
 
+    const priceTiers: { min_qty: number; max_qty: number | null; price: number }[] = []
+    for (const t of form.price_tiers) {
+      if (t.price.trim() === '') continue
+      const unitPrice = Number(t.price)
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+        toast.error('请填写有效的批发阶梯单价（数字）')
+        return
+      }
+      priceTiers.push({ min_qty: t.min_qty, max_qty: t.max_qty, price: unitPrice })
+    }
+
     setSaving(true)
     try {
       const payload = {
@@ -238,9 +249,7 @@ export default function ProductAdmin() {
         product_line_id: Number(form.product_line_id),
         price: form.price ? Number(form.price) : null,
         sample_price: form.sample_price ? Number(form.sample_price) : null,
-        price_tiers: form.price_tiers
-          .filter((t) => t.price !== '')
-          .map((t) => ({ min_qty: t.min_qty, max_qty: t.max_qty, price: Number(t.price) })),
+        price_tiers: priceTiers,
         filling: form.filling || null,
         age_range: form.age_range || null,
         intl_url: form.intl_url || null,
@@ -258,8 +267,15 @@ export default function ProductAdmin() {
       setEditingId(null)
       setForm(emptyForm)
       loadProducts()
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || '操作失败')
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+      if (typeof detail === 'string') {
+        toast.error(detail)
+      } else if (Array.isArray(detail)) {
+        toast.error(detail.map((d: { msg?: string }) => d.msg).filter(Boolean).join('；') || '操作失败')
+      } else {
+        toast.error('操作失败')
+      }
     } finally {
       setSaving(false)
     }
